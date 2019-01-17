@@ -26,6 +26,17 @@ public class BangBangController implements UltrasonicController {
   public void processUSData(int distance) {
     this.distance = distance;
     // TODO: process a movement based on the us distance passed in (BANG-BANG style)
+    
+    // if robot is too far and out of hunting region
+    if(distance > (this.bandCenter + this.bandwidth)) {
+    	// sensor is on the left
+    	// left wheel slower
+    	WallFollowingLab.leftMotor.setSpeed(motorLow);
+    } else if(distance < (this.bandCenter - this.bandwidth)) {
+    	// robot is too close to wall
+    }
+    
+    
   }
 
   @Override
