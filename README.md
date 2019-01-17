@@ -16,4 +16,6 @@ __EV3 Wifi__
 ## Log ##
 __2019/01/16__
 - Built physical structure of robot for WallFollowingLab.
-- Need to add touch sensor to robot.
+
+__2019/01/17__
+- Need to check whether or not to add touch sensor to robot. The robot cannot "touch" the wall, but the sample code contains code for touch sensor
