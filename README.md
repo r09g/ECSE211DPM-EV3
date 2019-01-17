@@ -15,4 +15,5 @@ __EV3 Wifi__
 
 ## Log ##
 __2019/01/16__
-- Built physical structure of robot. <br/><br/>
+- Built physical structure of robot for WallFollowingLab.
+- Need to add touch sensor to robot.
