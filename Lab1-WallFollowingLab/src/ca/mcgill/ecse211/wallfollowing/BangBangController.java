@@ -43,7 +43,7 @@ public class BangBangController implements UltrasonicController {
 		
 		// count to decide if at corner
 		// check if distance stays max
-		if(this.distance > 150) {
+		if(this.distance > 250) {
 			this.tally++;
 		}
 		
