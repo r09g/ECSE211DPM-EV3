@@ -10,9 +10,7 @@ public class BangBangController implements UltrasonicController {
 	private final int motorHigh;
 	private int distance;
 	private int tally;		// decide corner
-	private int backuptally;		// back up decision
 	private boolean initial;	// first reading of US
-	private boolean backingup;
 
 	public BangBangController(int bandCenter, int bandwidth, int motorLow, int motorHigh) {
 		// Default Constructor
@@ -21,9 +19,7 @@ public class BangBangController implements UltrasonicController {
 		this.motorLow = 50;
 		this.motorHigh = 150;
 		this.tally = 0;
-		this.backuptally = 0;
 		this.initial = true;
-		this.backingup = false;
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 	}
@@ -52,7 +48,7 @@ public class BangBangController implements UltrasonicController {
 		}
 		
 		// check valid distance value
-		if(this.distance < 150 && this.distance > 15) {
+		if(this.distance < 150) {
 			this.tally = 0;		// clear tally value
 			
 			if(this.distance > (this.bandCenter + this.bandwidth)) {
