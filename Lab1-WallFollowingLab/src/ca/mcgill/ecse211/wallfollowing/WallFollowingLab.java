@@ -86,6 +86,10 @@ public class WallFollowingLab {
 		// Start the poller and printer threads
 		usPoller.start();
 		printer.start();
+		
+		// start motor after sensor working
+		WallFollowingLab.leftMotor.forward();
+		WallFollowingLab.rightMotor.forward();
 
 		// Wait here forever until button pressed to terminate wallfollower
 		Button.waitForAnyPress();
