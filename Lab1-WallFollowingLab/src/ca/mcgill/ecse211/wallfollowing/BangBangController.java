@@ -55,23 +55,17 @@ public class BangBangController implements UltrasonicController {
 		if(this.distance < 150 && this.distance > 15) {
 			this.tally = 0;		// clear tally value
 			
-			// check to change to forward drive when distance > 15
-			if(this.backingup = true) {
-				this.backingup = false;
-				this.goforward(100);
-			}
-			
-			if(this.distance > (this.bandCenter + 10 + this.bandwidth)) {
+			if(this.distance > (this.bandCenter + this.bandwidth)) {
 				// this is for far from wall
 				// turn left
 				this.turnleft(50, 50);
 				System.out.println("left");
-			} else if(this.distance < (this.bandCenter + 10 - this.bandwidth)) {
+			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
 				// this is for close to wall
 				// turn right
-				if(this.distance < 15) {
+				if(this.distance < 10) {
 					// turn faster if too close
-					this.turnright(80, 50);
+					this.turnright(100, 50);
 				} else {
 					this.turnright(50, 50);
 				}
@@ -79,18 +73,12 @@ public class BangBangController implements UltrasonicController {
 			} else {
 				// keep going
 			}
-		} else if(this.distance < 10) { 
-			// this is for back up
-			this.backuptally++;
-			if(this.backuptally > 20) {
-				this.backup(50,130);
-			}
 		} else {
 			// this is for corners
 			// turn left faster, robot at edge
 			// check tally
 			if(tally > 100) {
-				this.turnleft(70, 50);
+				this.turnleft(90, 50);
 			}
 		}
 		
@@ -108,24 +96,6 @@ public class BangBangController implements UltrasonicController {
 	private void turnright(int leftmotor, int rightmotor) {
 		WallFollowingLab.leftMotor.setSpeed(motorHigh + leftmotor);
 		WallFollowingLab.rightMotor.setSpeed(motorHigh - rightmotor);
-		return;
-	}
-	
-	// go straight
-	private void goforward(int speed) {
-		WallFollowingLab.leftMotor.setSpeed(speed + 30);
-		WallFollowingLab.rightMotor.setSpeed(speed);
-		WallFollowingLab.leftMotor.forward();
-		WallFollowingLab.rightMotor.forward();
-	}
-	
-	// back up straight
-	private void backup(int leftspeed, int rightspeed) {
-		this.backingup = true;
-		WallFollowingLab.leftMotor.setSpeed(leftspeed);
-		WallFollowingLab.rightMotor.setSpeed(rightspeed);
-		WallFollowingLab.leftMotor.backward();
-		WallFollowingLab.rightMotor.backward();
 		return;
 	}
 
