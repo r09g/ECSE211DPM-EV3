@@ -12,11 +12,3 @@ __Execution Environment JRE__
 __EV3 Wifi__
 - Plug in USB wifi module on EV3 and restart EV3.
 - Go into "wifi" on EV3 and connect to access point (router). Enter the IP address shown on EV3 into Eclipse, under leJOS EV3 configurations. IP address changes each time a connection is established.
-
-# Log #
-## Lab1-WallFollowingLab ##
-__2019/01/16__
-- Built physical structure of robot for WallFollowingLab.
-
-__2019/01/17__
-- Need to check whether or not to add touch sensor to robot. The robot cannot "touch" the wall, but the sample code contains code for touch sensor
