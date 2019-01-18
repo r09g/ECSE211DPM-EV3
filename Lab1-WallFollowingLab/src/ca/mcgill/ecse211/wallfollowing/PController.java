@@ -48,6 +48,22 @@ public class PController implements UltrasonicController {
     }
 
     // TODO: process a movement based on the us distance passed in (P style)
+    /*A more elaborate approach would scale the correction, i.e., DELTASPD according to Error 
+     * (this is called proportional control)
+     */
+    float error = bandCenter - distance;//creates error
+    float deltaspeed = error*MOTOR_SPEED/500; // 500 may need to be tweaked to a different value 
+    if (Math.abs(error) < bandWidth) { //if the error is less than the threshold, we do nothing
+    	return;
+    }
+    else if (error < 0) { //decrease rotation of inside wheel to get cart closer to wall
+    	WallFollowingLab.leftMotor.setSpeed(deltaspeed); 
+    }
+    else { //(if error > 0 aka too close to wall, decrease rotation of outside wheel to move cart away from wall
+    	WallFollowingLab.rightMotor.setSpeed(deltaspeed); 
+    }
+    //might need to add something to make sure robot does not get confused by small gaps
+    //idk if we need to add anything here to have it exit the method correctly
   }
 
 
