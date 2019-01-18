@@ -48,7 +48,7 @@ public class BangBangController implements UltrasonicController {
 		}
 		
 		// check valid distance value
-		if(this.distance < 150) {
+		if(this.distance < 250) {
 			this.tally = 0;		// clear tally value
 			
 			if(this.distance > (this.bandCenter + this.bandwidth)) {
