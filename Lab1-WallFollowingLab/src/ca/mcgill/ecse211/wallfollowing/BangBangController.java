@@ -29,34 +29,28 @@ public class BangBangController implements UltrasonicController {
 
 		// count to decide if at corner
 		// check if distance stays max
-		if(this.distance > 200) {
+		if(this.distance > 160) {
 			this.tally++;
 			WallFollowingLab.leftMotor.setSpeed(100);
 			WallFollowingLab.rightMotor.setSpeed(100);
 		}
 
 		// check valid distance value
-		if(this.distance < 200) {
+		if(this.distance < 160) {
 			this.tally = 0;		// clear tally value
 
-			if(this.distance > (this.bandCenter + 20 + this.bandwidth)) {
+			if(this.distance > (this.bandCenter + this.bandwidth)) {
 				// this is for far from wall
 				// turn left, sharply if far from wall
 				WallFollowingLab.leftMotor.setSpeed(motorHigh - 70);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh + 70);
 
-			} else if(this.distance < (this.bandCenter + 20 - this.bandwidth)) {
+			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
 				// this is for close to wall
 				// turn right
-				if(this.distance < 10) {
-					// turn faster if too close
-					WallFollowingLab.leftMotor.setSpeed(motorHigh + 200);
-					WallFollowingLab.rightMotor.setSpeed(motorHigh - 120);
-				} else {
-					WallFollowingLab.leftMotor.setSpeed(motorHigh + 150);
-					WallFollowingLab.rightMotor.setSpeed(motorHigh - 100);
-				}
-
+				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180);
+				WallFollowingLab.rightMotor.setSpeed(motorHigh - 100);
+			
 			} else {
 				// within band
 				WallFollowingLab.leftMotor.setSpeed(motorHigh);
@@ -66,9 +60,9 @@ public class BangBangController implements UltrasonicController {
 			// this is for corners
 			// turn left faster, robot at edge
 			// check tally
-			if(tally > 20) {
-				WallFollowingLab.leftMotor.setSpeed(motorHigh - 70);
-				WallFollowingLab.rightMotor.setSpeed(motorHigh + 100);
+			if(tally > 50) {
+				WallFollowingLab.leftMotor.setSpeed(motorHigh - 40);
+				WallFollowingLab.rightMotor.setSpeed(motorHigh + 140);
 			}
 		}
 
