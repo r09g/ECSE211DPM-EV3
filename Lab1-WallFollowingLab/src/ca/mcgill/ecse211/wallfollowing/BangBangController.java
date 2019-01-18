@@ -58,16 +58,19 @@ public class BangBangController implements UltrasonicController {
 			if(this.distance > (this.bandCenter + this.bandwidth)) {
 				// this is for far from wall
 				// turn left
-				this.turnleft(50, 50);
+				WallFollowingLab.leftMotor.setSpeed(motorHigh - 50);
+				WallFollowingLab.rightMotor.setSpeed(motorHigh + 50);
 				System.out.println("left");
 			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
 				// this is for close to wall
 				// turn right
 				if(this.distance < 10) {
 					// turn faster if too close
-					this.turnright(100, 50);
+					WallFollowingLab.leftMotor.setSpeed(motorHigh + 100);
+					WallFollowingLab.rightMotor.setSpeed(motorHigh - 50);
 				} else {
-					this.turnright(50, 50);
+					WallFollowingLab.leftMotor.setSpeed(motorHigh + 50);
+					WallFollowingLab.rightMotor.setSpeed(motorHigh - 50);
 				}
 				System.out.println("right");
 			} else {
@@ -78,27 +81,13 @@ public class BangBangController implements UltrasonicController {
 			// turn left faster, robot at edge
 			// check tally
 			if(tally > 100) {
-				this.turnleft(90, 50);
+				WallFollowingLab.leftMotor.setSpeed(motorHigh - 90);
+				WallFollowingLab.rightMotor.setSpeed(motorHigh + 50);
 			}
 		}
 		
 		return;
 	}
-	
-	// helper method: turn left
-	private void turnleft(int leftmotor, int rightmotor) {
-		WallFollowingLab.leftMotor.setSpeed(motorHigh - leftmotor);
-		WallFollowingLab.rightMotor.setSpeed(motorHigh + rightmotor);
-		return;
-	}
-	
-	// turn right
-	private void turnright(int leftmotor, int rightmotor) {
-		WallFollowingLab.leftMotor.setSpeed(motorHigh + leftmotor);
-		WallFollowingLab.rightMotor.setSpeed(motorHigh - rightmotor);
-		return;
-	}
-
 	
 	@Override
 	public int readUSDistance() {
