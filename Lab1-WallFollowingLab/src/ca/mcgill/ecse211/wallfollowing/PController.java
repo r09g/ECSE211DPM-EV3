@@ -42,7 +42,7 @@ public class PController implements UltrasonicController {
 			if(this.distance > this.bandCenter) {
 				// this is for far from wall
 				// turn left, sharply if far from wall
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 6*(Math.abs(this.distance-bandWidth)));
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 5*(Math.abs(this.distance-bandWidth)));
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 6*(Math.abs(this.distance-bandWidth)));
 
 			} else if(this.distance < this.bandCenter) {
@@ -56,9 +56,9 @@ public class PController implements UltrasonicController {
 			// this is for corners
 			// turn left faster, robot at edge
 			// check tally
-			if(tally > 50) {
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 40);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 140);
+			if(tally > 40) {
+				WallFollowingLab.leftMotor.setSpeed(25);
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 260);
 			}
 		}
 
