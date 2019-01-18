@@ -11,7 +11,7 @@ public class WallFollowingLab {
 
 	// Parameters: adjust these for desired performance
 
-	private static final int bandCenter = 40; // Offset from the wall (cm)
+	private static final int bandCenter = 35; // Offset from the wall (cm)
 	private static final int bandWidth = 3; // Width of dead band (cm)
 	private static final int motorLow = 100; // Speed of slower rotating wheel (deg/sec)
 	private static final int motorHigh = 200; // Speed of the faster rotating wheel (deg/seec)
@@ -38,9 +38,8 @@ public class WallFollowingLab {
 				new BangBangController(bandCenter, bandWidth, motorLow, motorHigh);
 
 
-		/* Wait until P-type implemented
      PController pController = new PController(bandCenter, bandWidth);
-		 */
+
 
 		// Setup ultrasonic sensor
 		// There are 4 steps involved:
@@ -72,11 +71,9 @@ public class WallFollowingLab {
 			printer = new Printer(option, bangbangController);
 			break;
 		case Button.ID_RIGHT: // Proportional control selected
-			/*	Ptype not implemented yet
 			usPoller = new UltrasonicPoller(usDistance, usData, pController);
 			printer = new Printer(option, pController);
 			break;
-			*/
 		default:
 			System.out.println("Error - invalid button"); // None of the above - abort
 			System.exit(-1);
