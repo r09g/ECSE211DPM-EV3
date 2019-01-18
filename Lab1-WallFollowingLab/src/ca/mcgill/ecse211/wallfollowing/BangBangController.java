@@ -51,28 +51,28 @@ public class BangBangController implements UltrasonicController {
 		if(this.distance < 250) {
 			this.tally = 0;		// clear tally value
 			
-			if(this.distance > (this.bandCenter + this.bandwidth)) {
+			if(this.distance > (this.bandCenter + 10 + this.bandwidth)) {
 				// this is for far from wall
 				// turn left, sharply if far from wall
 				if(this.distance > 80) {
-					WallFollowingLab.leftMotor.setSpeed(motorHigh - 70);
-					WallFollowingLab.rightMotor.setSpeed(motorHigh + 70);
+					WallFollowingLab.leftMotor.setSpeed(motorHigh - 100);
+					WallFollowingLab.rightMotor.setSpeed(motorHigh + 100);
 				} else {
-					WallFollowingLab.leftMotor.setSpeed(motorHigh - 50);
-					WallFollowingLab.rightMotor.setSpeed(motorHigh + 50);
+					WallFollowingLab.leftMotor.setSpeed(motorHigh - 80);
+					WallFollowingLab.rightMotor.setSpeed(motorHigh + 80);
 				}
 				
 				System.out.println("left");
-			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
+			} else if(this.distance < (this.bandCenter + 10 - this.bandwidth)) {
 				// this is for close to wall
 				// turn right
 				if(this.distance < 10) {
 					// turn faster if too close
-					WallFollowingLab.leftMotor.setSpeed(motorHigh + 100);
-					WallFollowingLab.rightMotor.setSpeed(motorHigh - 50);
+					WallFollowingLab.leftMotor.setSpeed(motorHigh + 120);
+					WallFollowingLab.rightMotor.setSpeed(motorHigh - 100);
 				} else {
-					WallFollowingLab.leftMotor.setSpeed(motorHigh + 50);
-					WallFollowingLab.rightMotor.setSpeed(motorHigh - 50);
+					WallFollowingLab.leftMotor.setSpeed(motorHigh + 80);
+					WallFollowingLab.rightMotor.setSpeed(motorHigh - 80);
 				}
 				System.out.println("right");
 			} else {
@@ -83,8 +83,8 @@ public class BangBangController implements UltrasonicController {
 			// turn left faster, robot at edge
 			// check tally
 			if(tally > 100) {
-				WallFollowingLab.leftMotor.setSpeed(motorHigh - 90);
-				WallFollowingLab.rightMotor.setSpeed(motorHigh + 50);
+				WallFollowingLab.leftMotor.setSpeed(motorHigh - 60);
+				WallFollowingLab.rightMotor.setSpeed(motorHigh + 70);
 			}
 		}
 		
