@@ -31,10 +31,6 @@ public class PController implements UltrasonicController {
 		// check if distance stays max
 		if(this.distance > 160) {
 			this.tally++;
-			WallFollowingLab.leftMotor.setSpeed(150);
-			WallFollowingLab.rightMotor.setSpeed(150);
-			WallFollowingLab.rightMotor.forward();
-			WallFollowingLab.leftMotor.forward();
 		}
 
 		// check valid distance value
@@ -74,8 +70,9 @@ public class PController implements UltrasonicController {
 			// turn left faster, robot at edge
 			// check tally
 			if(tally > 40) {
-				WallFollowingLab.leftMotor.setSpeed(50);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 170);
+				Delta = Math.abs(this.distance - this.bandCenter);
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 10 * Delta);
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 10 * Delta);
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			} else if(tally > 15 && tally < 40) {
