@@ -10,7 +10,7 @@ public class BangBangController implements UltrasonicController {
 	private final int motorLow; //low speed
 	private final int motorHigh; //high speed
 	private int distance; //distance recorded by sensor
-	private int tally; // count the number of consecutive times out of bounds distances were recorded
+	private int tally; //count the number of consecutive times out of bounds distances were recorded
 	private final int bound = 160; //any distance above 160 will be considered out of bounds
 
 	public BangBangController(int bandCenter, int bandwidth, int motorLow, int motorHigh) {
@@ -29,7 +29,7 @@ public class BangBangController implements UltrasonicController {
 		this.distance = distance;
 		
 		// TODO: process a movement based on the us distance passed in (BANG-BANG style)
-		int error = this.distance - this.bandCenter;
+		int delta = this.distance - this.bandCenter; //difference between actual distance and required distance from wall
 
 		if(this.distance > bound) { //if sensor records out of bounds distance
 			this.tally++;		
@@ -38,7 +38,7 @@ public class BangBangController implements UltrasonicController {
 		if(this.distance < bound) { //if sensor records valid distance
 			this.tally = 0;		// clears tally value
 
-			if(Math.abs(error) > (this.bandwidth) && error > 0) {// if robot too far from wall by more than dead band value
+			if(Math.abs(delta) > (this.bandwidth) && delta > 0) {// if robot too far from wall by more than dead band value
 				
 				WallFollowingLab.leftMotor.setSpeed(motorHigh - 110); //slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(motorHigh + 70); //speed up right motor
@@ -47,7 +47,7 @@ public class BangBangController implements UltrasonicController {
 				WallFollowingLab.leftMotor.forward();
 
 			} 
-			else if(Math.abs(error) > (this.bandwidth) && error < 0) { //if robot too close to wall by more than dead band value
+			else if(Math.abs(delta) > (this.bandwidth) && delta < 0) { //if robot too close to wall by more than dead band value
 				
 				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180); // speed up left motor
 				WallFollowingLab.rightMotor.setSpeed(10); //slow down right motor
@@ -56,7 +56,7 @@ public class BangBangController implements UltrasonicController {
 				WallFollowingLab.leftMotor.forward();
 			
 			}
-			else {	//error within dead band
+			else {	//delta within dead band
 				WallFollowingLab.leftMotor.setSpeed(motorHigh);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh);
 				//robot keeps going straight
