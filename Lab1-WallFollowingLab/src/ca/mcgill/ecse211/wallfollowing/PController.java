@@ -49,7 +49,7 @@ public class PController implements UltrasonicController {
 				Delta = 20;
 			}
 
-			if(this.distance > this.bandCenter) {
+			if(this.distance > this.bandCenter - 5) {
 				// this is for far from wall
 				// turn left, sharply if far from wall
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 6 * Delta);
@@ -64,7 +64,7 @@ public class PController implements UltrasonicController {
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();	
 				try {
-					Thread.sleep(750);
+					Thread.sleep(500);
 				} catch(Exception e) {
 
 				}
@@ -75,7 +75,13 @@ public class PController implements UltrasonicController {
 			// check tally
 			if(tally > 40) {
 				WallFollowingLab.leftMotor.setSpeed(50);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 150);
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 170);
+				WallFollowingLab.rightMotor.forward();
+				WallFollowingLab.leftMotor.forward();
+			} else if(tally > 15 && tally < 40) {
+				// counting tally
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 2);
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 2);
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			}

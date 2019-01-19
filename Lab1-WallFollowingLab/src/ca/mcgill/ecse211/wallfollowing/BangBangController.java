@@ -70,7 +70,7 @@ public class BangBangController implements UltrasonicController {
 			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
 				// this is for close to wall
 				// turn right
-				WallFollowingLab.leftMotor.setSpeed(motorHigh + 170);
+				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180);
 				WallFollowingLab.rightMotor.setSpeed(10);
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
