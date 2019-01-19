@@ -5,12 +5,13 @@ import java.math.*;
 
 public class BangBangController implements UltrasonicController {
 
-	private final int bandCenter;
-	private final int bandwidth;
-	private final int motorLow;
-	private final int motorHigh;
-	private int distance;
-	private int tally;		// decide corner
+	private final int bandCenter; //offset from the wall
+	private final int bandwidth; //width of dead band
+	private final int motorLow; //low speed
+	private final int motorHigh; //high speed
+	private int distance; //distance recorded by sensor
+	private int tally; // count the number of consecutive times out of bounds distances were recorded
+	private final int bound = 160; //any distance above 160 will be considered out of bounds
 
 	public BangBangController(int bandCenter, int bandwidth, int motorLow, int motorHigh) {
 		// Default Constructor
@@ -22,83 +23,68 @@ public class BangBangController implements UltrasonicController {
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 	}
- 	
-	// TODO: process a movement based on the us distance passed in (BANG-BANG style)
-    /* Consider a digital control loop that periodically samples the output at a rate S. 
-     * •At each sample interval, compute error, e, and apply a correction in the appropriate direction (+/-) 
-     * using a fixed step. 
-     * •If the correction is applied often enough, the output will eventually catch up and follow the input as desired.
-     * •At convergence, the controller will “hunt” about the zero error point applying successive +/- corrections. 
-     * •We eliminate hunting by suppressing any correction if | r – y | is less than threshold*/
-    /*Steering the cart:
-     *- Error = reference control value
-     *- measured distance from the wall. 
-     *- If abs(Error) < Threshold,  we consider the cart to be on a correct heading. 
-     *- if Error < 0, the cart is too far from the wall.  Increase rotation of outside wheel; 
-     *		(decrease rotation of inside wheel). 
-     *- If Error > 0, the cart is too close to the wall.  Decrease rotation of outside wheel; 
-     *		(increase rotation of inside wheel). -Magnitude of change in rotation is proportional to the magnitude
-     *		 of the error. 
-     *- In our example, we follow the BANG BANG approach and define 2 speeds: 
-     *	FWDSPEED – speed at which left and right wheel rotate to go straight. 
-     *	DELTASPD – amount by which speed increased/decreased to effect motion towards/away from wall*/
-
+    
 	@Override
 	public void processUSData(int distance) {
 		this.distance = distance;
+		
 		// TODO: process a movement based on the us distance passed in (BANG-BANG style)
+		int error = this.distance - this.bandCenter;
 
-		// count to decide if at corner
-		// check if distance stays max
-		if(this.distance > 160) {
-			this.tally++;
-			
+		if(this.distance > bound) { //if sensor records out of bounds distance
+			this.tally++;		
 		}
+				
+		if(this.distance < bound) { //if sensor records valid distance
+			this.tally = 0;		// clears tally value
 
-		// check valid distance value
-		if(this.distance < 160) {
-			this.tally = 0;		// clear tally value
-
-			if(this.distance > (this.bandCenter + this.bandwidth)) {
-				// this is for far from wall
-				// turn left
-				WallFollowingLab.leftMotor.setSpeed(motorHigh - 110);
-				WallFollowingLab.rightMotor.setSpeed(motorHigh + 70);
+			if(Math.abs(error) > (this.bandwidth) && error > 0) {// if robot too far from wall by more than dead band value
+				
+				WallFollowingLab.leftMotor.setSpeed(motorHigh - 110); //slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(motorHigh + 70); //speed up right motor
+				//proceed to turn left, moving closer to wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 
-			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
-				// this is for close to wall
-				// turn right
-				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180);
-				WallFollowingLab.rightMotor.setSpeed(10);
+			} 
+			else if(Math.abs(error) > (this.bandwidth) && error < 0) { //if robot too close to wall by more than dead band value
+				
+				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180); // speed up left motor
+				WallFollowingLab.rightMotor.setSpeed(10); //slow down right motor
+				//proceed to turn right, moving away from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			
-			} else {
-				// within band
+			}
+			else {	//error within dead band
 				WallFollowingLab.leftMotor.setSpeed(motorHigh);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh);
+				//robot keeps going straight
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			}
-		} else {
-			// this is for corners
-			// turn left faster, robot at edge
-			// check tally
-			if(tally > 45) {
-				// corner left turn
-				WallFollowingLab.leftMotor.setSpeed(30);
-				WallFollowingLab.rightMotor.setSpeed(motorHigh + 160);
+		} 
+		else { //if tally != 0
+			
+			if(tally > 45) { //out of bounds distance recorded more than 45 times, so there really is nothing there
+				
+				WallFollowingLab.leftMotor.setSpeed(30); //slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(motorHigh + 160); //speed up right motor
+				// proceed to make corner left turn: sharper and faster than usual left turn to keep fix distance from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
-			} else if (tally > 15 && tally < 45) {
-				// counting tally
-				WallFollowingLab.leftMotor.setSpeed(motorLow);
-				WallFollowingLab.rightMotor.setSpeed(motorLow);
+			} 
+			else if (tally > 15 && tally < 45) { //if sensor needs more time to complete tally
+				
+				WallFollowingLab.leftMotor.setSpeed(motorLow); //slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(motorLow); //slow down right motor
+				//proceeds to slow robot down in straight line, giving it more time to complete tally without it moving too far
+				//away from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			}
+			//if tally < 15 then either it was a mistake and there is indeed a wall, either it was a small gap
+			//do nothing, keep going straight
 		}
 		
 		return;
