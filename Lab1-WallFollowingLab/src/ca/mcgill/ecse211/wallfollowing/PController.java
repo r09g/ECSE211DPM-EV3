@@ -6,7 +6,6 @@ public class PController implements UltrasonicController {
 
 	/* Constants */
 	private static final int MOTOR_SPEED = 200;
-	private static final int FILTER_OUT = 20;
 
 	private final int bandCenter;
 	private final int bandWidth;
@@ -27,13 +26,13 @@ public class PController implements UltrasonicController {
 	public void processUSData(int distance) {
 		this.distance = distance;
 		// TODO: process a movement based on the us distance passed in (BANG-BANG style)
-		
+
 		// count to decide if at corner
 		// check if distance stays max
 		if(this.distance > 160) {
 			this.tally++;
-			WallFollowingLab.leftMotor.setSpeed(200);
-			WallFollowingLab.rightMotor.setSpeed(200);
+			WallFollowingLab.leftMotor.setSpeed(150);
+			WallFollowingLab.rightMotor.setSpeed(150);
 			WallFollowingLab.rightMotor.forward();
 			WallFollowingLab.leftMotor.forward();
 		}
@@ -42,28 +41,33 @@ public class PController implements UltrasonicController {
 		if(this.distance < 180) {
 			this.tally = 0;		// clear tally value
 			Delta = Math.abs(this.distance - this.bandCenter);
-			
+
 			// regulate Delta
-			if(Delta < 8) {
-				Delta = 8;
-			} else if(Delta > 25) {
-				Delta = 25;
+			if(Delta < 5) {
+				Delta = 5;
+			} else if(Delta > 20) {
+				Delta = 20;
 			}
-			
+
 			if(this.distance > this.bandCenter) {
 				// this is for far from wall
 				// turn left, sharply if far from wall
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 7 * Delta);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 10 * Delta);
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 6 * Delta);
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 8 * Delta);
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			} else {
 				// this is for close to wall
 				// turn right
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 8 * Delta);
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 12 * Delta);
 				WallFollowingLab.rightMotor.forward();
-				WallFollowingLab.leftMotor.forward();
+				WallFollowingLab.leftMotor.forward();	
+				try {
+					Thread.sleep(750);
+				} catch(Exception e) {
+
+				}
 			}
 		} else {
 			// this is for corners

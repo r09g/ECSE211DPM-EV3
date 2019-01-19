@@ -52,8 +52,6 @@ public class BangBangController implements UltrasonicController {
 		// check if distance stays max
 		if(this.distance > 160) {
 			this.tally++;
-			WallFollowingLab.leftMotor.setSpeed(100);
-			WallFollowingLab.rightMotor.setSpeed(100);
 		}
 
 		// check valid distance value
@@ -65,17 +63,23 @@ public class BangBangController implements UltrasonicController {
 				// turn left, sharply if far from wall
 				WallFollowingLab.leftMotor.setSpeed(motorHigh - 120);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh + 70);
+				WallFollowingLab.rightMotor.forward();
+				WallFollowingLab.leftMotor.forward();
 
 			} else if(this.distance < (this.bandCenter - this.bandwidth)) {
 				// this is for close to wall
 				// turn right
 				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180);
 				WallFollowingLab.rightMotor.setSpeed(20);
+				WallFollowingLab.rightMotor.forward();
+				WallFollowingLab.leftMotor.forward();
 			
 			} else {
 				// within band
 				WallFollowingLab.leftMotor.setSpeed(motorHigh);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh);
+				WallFollowingLab.rightMotor.forward();
+				WallFollowingLab.leftMotor.forward();
 			}
 		} else {
 			// this is for corners
@@ -84,6 +88,8 @@ public class BangBangController implements UltrasonicController {
 			if(tally > 45) {
 				WallFollowingLab.leftMotor.setSpeed(25);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh + 160);
+				WallFollowingLab.rightMotor.forward();
+				WallFollowingLab.leftMotor.forward();
 			}
 		}
 
