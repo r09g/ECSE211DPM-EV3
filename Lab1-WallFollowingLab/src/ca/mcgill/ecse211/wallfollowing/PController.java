@@ -85,8 +85,8 @@ public class PController implements UltrasonicController {
 				// of the robot in different wall placements, and is the result of tuning
 				// The constants are larger compared to left turns because wall is on the left and we want the robot to get
 				// out of the situation as fast as possible
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta); //speed up left motor 
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 12 * Delta); //slow down right motor 
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta); // speed up left motor 
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 12 * Delta); // slow down right motor 
 				//proceed to turn right, moving away from wall, proportionally to how far off the robot was from the required distance
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();	
