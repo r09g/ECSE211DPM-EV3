@@ -15,7 +15,7 @@ public class WallFollowingLab {
 	private static final int bandWidth = 3; // Width of dead band (cm)
 	private static final int motorLow = 175; // Speed of slower rotating wheel (deg/sec)
 	private static final int motorHigh = 275; // Speed of the faster rotating wheel (deg/seec)
-
+	//sensor on left of robot
 
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	public static final EV3LargeRegulatedMotor leftMotor =
