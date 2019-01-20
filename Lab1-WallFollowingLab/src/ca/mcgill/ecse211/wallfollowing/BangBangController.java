@@ -23,7 +23,7 @@ public class BangBangController implements UltrasonicController {
 		WallFollowingLab.leftMotor.setSpeed(motorHigh); // Start robot moving forward
 		WallFollowingLab.rightMotor.setSpeed(motorHigh);
 	}
-    
+	//DO NOT FORGET TO JAVADOC ALL PUBLIC CLASSES AND METHODS EVEN THOSE FROM THE STARTER CODE
 	@Override
 	public void processUSData(int distance) {
 		this.distance = distance;
@@ -46,8 +46,7 @@ public class BangBangController implements UltrasonicController {
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 
-			} 
-			else if(Math.abs(delta) > (this.bandwidth) && delta < 0) { //if robot too close to wall by more than dead band value
+			} else if(Math.abs(delta) > (this.bandwidth) && delta < 0) { //if robot too close to wall by more than dead band value
 				
 				WallFollowingLab.leftMotor.setSpeed(motorHigh + 180); // speed up left motor
 				WallFollowingLab.rightMotor.setSpeed(10); //slow down right motor
@@ -55,16 +54,14 @@ public class BangBangController implements UltrasonicController {
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			
-			}
-			else {	//delta within dead band
+			} else {	//delta within dead band
 				WallFollowingLab.leftMotor.setSpeed(motorHigh);
 				WallFollowingLab.rightMotor.setSpeed(motorHigh);
 				//robot keeps going straight
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			}
-		} 
-		else { //if sensor records an out of bound distance
+		} else { //if sensor records an out of bound distance
 			
 			if(tally > 45) { //out of bounds distance recorded more than 45 times, so there really is nothing there
 				
@@ -73,8 +70,7 @@ public class BangBangController implements UltrasonicController {
 				// proceed to make corner left turn: sharper and faster than usual left turn to keep fix distance from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
-			} 
-			else if (tally > 15 && tally < 45) { //if sensor needs more time to complete tally
+			} else if (tally > 15 && tally < 45) { //if sensor needs more time to complete tally
 				
 				WallFollowingLab.leftMotor.setSpeed(motorLow); //slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(motorLow); //slow down right motor
@@ -85,8 +81,7 @@ public class BangBangController implements UltrasonicController {
 			}
 			//if tally < 15 then either it was a mistake and there is indeed a wall, either it was a small gap
 			//do nothing, keep going straight
-		}
-		
+		}		
 		return;
 	}
 

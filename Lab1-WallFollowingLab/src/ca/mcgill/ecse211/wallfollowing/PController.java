@@ -22,7 +22,7 @@ public class PController implements UltrasonicController {
 		WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // Initialize motor rolling forward
 		WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED);
 	}
-
+	//DO NOT FORGET TO JAVADOC ALL PUBLIC CLASSES AND METHODS EVEN THOSE FROM THE STARTER CODE
 	@Override
 	public void processUSData(int distance) {
 		this.distance = distance;
@@ -43,8 +43,7 @@ public class PController implements UltrasonicController {
 			// regulate Delta
 			if (Delta < 5) {
 				Delta = 5;
-			} 
-			else if (Delta > 20) {
+			} else if (Delta > 20) {
 				Delta = 20;
 			}
 
@@ -54,8 +53,7 @@ public class PController implements UltrasonicController {
 				//proceed to turn left, getting closer to the wall, proportionally to how far off the robot was from the required distance
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
-			} 
-			else { //if robot too close to wall
+			} else { //if robot too close to wall
 				// this is for close to wall
 				// turn right
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta); //speed up left motor proportionally to delta
@@ -66,9 +64,8 @@ public class PController implements UltrasonicController {
 				
 				try {
 					Thread.sleep(500);
-				} 
-				catch(Exception e) {
-
+				} catch(Exception e) {
+					
 				}
 			}
 		} 
@@ -80,8 +77,7 @@ public class PController implements UltrasonicController {
 				// proceed to make corner left turn: sharper and faster than other left turns to keep fix distance from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
-			} 
-			else if(tally > 15 && tally < 40) { //if sensor needs more time to complete tally
+			} else if(tally > 15 && tally < 40) { //if sensor needs more time to complete tally
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 2); //slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 2); //slow down right motor
 				//proceeds to slow robot down in straight line, giving it more time to complete tally without it moving too far
@@ -92,7 +88,6 @@ public class PController implements UltrasonicController {
 			//if tally < 15 then either it was a mistake and there is indeed a wall, either it was a small gap
 			//do nothing, keep going straight
 		}
-
 		return;
 	}
 
