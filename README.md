@@ -12,3 +12,6 @@ __Execution Environment JRE__
 __EV3 Wifi__
 - Plug in USB wifi module on EV3 and restart EV3.
 - Go into "wifi" on EV3 and connect to access point (router). Enter the IP address shown on EV3 into Eclipse, under leJOS EV3 configurations. IP address changes each time a connection is established.
+
+__EV3 Parts List__
+- [Parts](EV3-Parts-List.pdf)
