@@ -64,7 +64,7 @@ public class BangBangController implements UltrasonicController {
 				WallFollowingLab.leftMotor.forward();
 			}
 		} 
-		else { //if tally != 0
+		else { //if sensor records an out of bound distance
 			
 			if(tally > 45) { //out of bounds distance recorded more than 45 times, so there really is nothing there
 				

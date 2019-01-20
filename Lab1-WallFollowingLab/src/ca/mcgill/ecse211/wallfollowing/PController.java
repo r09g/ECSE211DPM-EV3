@@ -48,43 +48,49 @@ public class PController implements UltrasonicController {
 				Delta = 20;
 			}
 
-			if (this.distance > this.bandCenter - 5) {
-				// this is for far from wall
-				// turn left, sharply if far from wall
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 6 * Delta);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 8 * Delta);
+			if (this.distance > this.bandCenter - 5) { //if robot too far from wall
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - 6 * Delta); //slow down left motor proportionally to delta
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 8 * Delta); //speed up right motor proportionally to delta
+				//proceed to turn left, getting closer to the wall, proportionally to how far off the robot was from the required distance
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			} 
-			else {
+			else { //if robot too close to wall
 				// this is for close to wall
 				// turn right
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 12 * Delta);
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta); //speed up left motor proportionally to delta
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 12 * Delta); //slow down right motor proportionally to delta
+				//proceed to turn right, moving away from wall, proportionally to how far off the robot was from the required distance
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();	
+				
 				try {
 					Thread.sleep(500);
-				} catch(Exception e) {
+				} 
+				catch(Exception e) {
 
 				}
 			}
-		} else {
-			// this is for corners
-			// turn left faster, robot at edge
-			// check tally
-			if(tally > 40) {
-				WallFollowingLab.leftMotor.setSpeed(50);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 170);
+		} 
+		else { //if sensor records out of bounds distance
+			
+			if(tally > 40) { ////out of bounds distance recorded more than 40 times, so there really is nothing there
+				WallFollowingLab.leftMotor.setSpeed(50); //slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + 170); //speed up right motor
+				// proceed to make corner left turn: sharper and faster than other left turns to keep fix distance from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
-			} else if(tally > 15 && tally < 40) {
-				// counting tally
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 2);
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 2);
+			} 
+			else if(tally > 15 && tally < 40) { //if sensor needs more time to complete tally
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 2); //slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 2); //slow down right motor
+				//proceeds to slow robot down in straight line, giving it more time to complete tally without it moving too far
+				//away from wall
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			}
+			//if tally < 15 then either it was a mistake and there is indeed a wall, either it was a small gap
+			//do nothing, keep going straight
 		}
 
 		return;
