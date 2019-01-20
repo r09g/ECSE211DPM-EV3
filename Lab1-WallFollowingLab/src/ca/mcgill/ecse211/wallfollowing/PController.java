@@ -54,8 +54,7 @@ public class PController implements UltrasonicController {
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			} else { //if robot too close to wall
-				// this is for close to wall
-				// turn right
+				
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 12 * Delta); //speed up left motor proportionally to delta
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - 12 * Delta); //slow down right motor proportionally to delta
 				//proceed to turn right, moving away from wall, proportionally to how far off the robot was from the required distance
