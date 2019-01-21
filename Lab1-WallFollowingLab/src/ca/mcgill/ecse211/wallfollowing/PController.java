@@ -54,7 +54,7 @@ public class PController implements UltrasonicController {
 	/**
 	 * The normal speed of the left and right motor when following the wall.
 	 */
-	private static final int MOTOR_SPEED = 250;			// normal speed
+	private static final int MOTOR_SPEED = 250; // normal speed
 
 	/**
 	 * The upper limit for the distance readings from the ultrasonic sensor, any
@@ -104,7 +104,7 @@ public class PController implements UltrasonicController {
 	 */
 	private int filter;
 
-	/*
+	/**
 	 * This variable is used to store the difference between the current distance
 	 * measured by the ultrasonic sensor and the target distance for the robot to
 	 * maintain.
@@ -113,12 +113,17 @@ public class PController implements UltrasonicController {
 
 	/**
 	 * Constructor that creates an instance of the PController class and initializes
-	 * the class variables.
+	 * the class variables. The bandCenter is adjusted with respect to the initial
+	 * input to tune the robot to its best performance. Note this adjustment should
+	 * vary with different robot and physical conditions (i.e. tires, dirt on
+	 * ground, ground material, and other factors)
 	 * 
 	 * @param bandCenter distance for the robot to keep from the wall, value is set
-	 *                   in the {@link}
+	 *                   in the WallFollowingLab class
 	 * @param bandWidth  range where the robot does not make adjustments to the
 	 *                   motor speed, value is set in the WallFollowingLab class
+	 * 
+	 * @see WallFollowingLab
 	 */
 	public PController(int bandCenter, int bandWidth) {
 		this.bandCenter = bandCenter - 3;
