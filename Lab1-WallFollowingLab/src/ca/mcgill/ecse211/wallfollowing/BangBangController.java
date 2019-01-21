@@ -15,8 +15,8 @@ public class BangBangController implements UltrasonicController {
 
 	public BangBangController(int bandCenter, int bandwidth, int motorLow, int motorHigh) {
 		// Default Constructor
-		this.bandCenter = bandCenter;
-		this.bandwidth = bandwidth;
+		this.bandCenter = bandCenter - 3;
+		this.bandwidth = bandwidth - 1;
 		this.motorLow = motorLow;
 		this.motorHigh = motorHigh;
 		this.tally = 0;
