@@ -22,7 +22,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * Lab Group: 43
  * 
  * @author1 Erica De Petrillo <br>
- *          McGill ID:
+ *          McGill ID: 260432677
  * @author2 Raymond Yang <br>
  *          McGill ID: 260777792
  */
@@ -104,9 +104,9 @@ public class PController implements UltrasonicController {
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 				
-				if(this.distance < 12) {
+				if(this.distance < 10) {
 					try {
-						Thread.sleep(200);
+						Thread.sleep(175);
 					} catch(Exception e) {
 
 					}
@@ -124,7 +124,7 @@ public class PController implements UltrasonicController {
 			// this is for corners
 			// turn left faster, robot at edge
 			// check tally
-			if (tally > 40) {
+			if (tally > 45) {
 				// out of bounds distance recorded more than 40 times, so there really is
 				// nothing there
 				// Make a sharper and
@@ -137,13 +137,13 @@ public class PController implements UltrasonicController {
 					error = 15;
 				}
 
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 25 - CONSTANT * error); // slow down left motor
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 50 - CONSTANT * error); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up right motor
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			} else { // if sensor needs more time to complete tally
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // slow down left motor
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED); // slow down right motor
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED/2); // slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED/2); // slow down right motor
 				// proceeds to slow robot down in straight line, giving it more time to complete
 				// tally without it moving too far
 				// away from wall
