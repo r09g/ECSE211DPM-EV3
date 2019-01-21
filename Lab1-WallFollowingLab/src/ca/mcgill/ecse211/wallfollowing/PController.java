@@ -14,22 +14,32 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * the ultrasonic sensor itself.
  * 
  * <p>
+ * This class implements the UltrasonicController interface and implements the
+ * methods {@link #processUSData(int)} and {@link #readUSDistance()}.
+ * 
+ * <p>
  * This class consists of constants and class variables, a constructor for
  * creating a new instance of this class, and non-static methods: a "wrapper"
  * method that returns the distance reading, and a public method which process
  * distance readings and make adjustments to the left and right motors of the
  * robot. The constants are the parameters that are set specifically for this
  * type of controller. The private class variables are the parameters that are
- * common to both controllers. However, some adjustments have been made on the
- * private class variables in the constructor of the class to account for
- * various uncontrollable physical, environmental, and device component
- * limitations, such as the measurement range of the ultrasonic sensor (only one
- * sensor is used for this implementation). In other words, the values of the
- * constants and variables in this class is likely tuned to the specific
- * environment the robot and this piece of code is tested.
+ * common to both controllers.
+ * 
+ * <p>
+ * As for the values of the constants and variables in this class, they are
+ * there to account for various uncontrollable physical, environmental, and
+ * device component limitations, such as the measurement range of the ultrasonic
+ * sensor (only one sensor is used for this implementation). The values are
+ * obtained through many experimental trials and testing with varying setup and
+ * initial conditions. In other words, the values of the constants and variables
+ * in this class is tuned to the specific environment at which the robot and
+ * this piece of code is tested.
  * 
  * <p>
  * Lab Group: 43
+ * 
+ * @see WallFollowingLab
  * 
  * @author1 Erica De Petrillo <br>
  * @author2 Raymond Yang <br>
@@ -37,28 +47,79 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class PController implements UltrasonicController {
 
-	/*
-	 * Constants
-	 * --------------------------------------------------------------------
-	 * MOTOR_SPEED: The normal speed of the left ad right motor when following the wall
-	 * BOUND: The upper limit for the distance readings from the ultrasonic sensor, any value above this limit would be identified as a potential false negative, filter would be activated
-	 * CONSTANT: The constant is an integer applied to the error (difference between target band center and current distance value) for adjusting the left and right motor speed
-	 * 
-	 * 
-	 * 
-	 */
+	// ----------------------------------------------------------------------------
+	// Constants
+	// ----------------------------------------------------------------------------
 
-	private static final int MOTOR_SPEED = 200;			// normal speed
+	/**
+	 * The normal speed of the left and right motor when following the wall.
+	 */
+	private static final int MOTOR_SPEED = 200;
+
+	/**
+	 * The upper limit for the distance readings from the ultrasonic sensor, any
+	 * value above this limit would be identified as a potential false negative,
+	 * filter would be activated.
+	 */
 	private static final int BOUND = 160;
+
+	/**
+	 * The constant is an integer applied to the error (difference between target
+	 * band center and current distance value) for adjusting the left and right
+	 * motor speed.
+	 */
 	private static final int CONSTANT = 9;
 
-	private final int bandCenter; // offset from the wall
-	private final int bandWidth; // width of dead band
-	private int distance; // distance recorded by sensor
+	// -----------------------------------------------------------------------------
+	// Class Variables
+	// -----------------------------------------------------------------------------
 
+	/**
+	 * This variable specifies the target distance (offset) the robot aims to keep
+	 * from the wall. Note this distance is the distance in terms of the ultrasonic
+	 * sensor's line of sight rather than the distance in terms of the robot itself.
+	 * 
+	 * @see WallFollowingLab
+	 */
+	private final int bandCenter;
+
+	/**
+	 * This variable specifies the range of deviation from the {@link #bandCenter}
+	 * that the robot does not act upon. Within this range of distance, the robot
+	 * will not make changes to the speed of its motors
+	 */
+	private final int bandWidth;
+
+	/**
+	 * This variable is used to store the distance read by the ultrasonic sensor
+	 */
+	private int distance;
+
+	/**
+	 * This variable plays an important role in implementing a filter mechanism. The
+	 * variable stores the number of times the robot's ultrasonic sensor gives a
+	 * reading larger than the {@link #BOUND}, consecutively. This variable helps
+	 * the robot determine whether it is at a corner (and turn left), or simply
+	 * passing a wall gap (and go straight).
+	 */
 	private int filter;
+
+	/*
+	 * This variable is used to store the difference between the current distance
+	 * measured by the ultrasonic sensor and the target distance for the robot to
+	 * maintain.
+	 */
 	private int error;
 
+	/**
+	 * Constructor that creates an instance of the PController class and initializes
+	 * the class variables.
+	 * 
+	 * @param bandCenter distance for the robot to keep from the wall, value is set
+	 *                   in the {@link}
+	 * @param bandWidth  range where the robot does not make adjustments to the
+	 *                   motor speed, value is set in the WallFollowingLab class
+	 */
 	public PController(int bandCenter, int bandWidth) {
 		this.bandCenter = bandCenter - 2;
 		this.bandWidth = bandWidth - 1;
