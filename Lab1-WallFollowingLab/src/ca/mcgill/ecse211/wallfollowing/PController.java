@@ -48,7 +48,7 @@ public class PController implements UltrasonicController {
 	 * 
 	 */
 
-	private static final int MOTOR_SPEED = 200;			// normal speed
+	private static final int MOTOR_SPEED = 250;			// normal speed
 	private static final int BOUND = 160;
 	private static final int CONSTANT = 9;
 
@@ -60,8 +60,8 @@ public class PController implements UltrasonicController {
 	private int error;
 
 	public PController(int bandCenter, int bandWidth) {
-		this.bandCenter = bandCenter - 2;
-		this.bandWidth = bandWidth - 1;
+		this.bandCenter = bandCenter -3;
+		this.bandWidth = bandWidth;
 		this.filter = 0;
 		this.error = 0;
 		WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // Initialize motor rolling forward
@@ -136,7 +136,7 @@ public class PController implements UltrasonicController {
 			// this is for corners
 			// turn left faster, robot at edge
 			// check filter
-			if (filter > 45) {
+			if (filter > 30) {
 				// out of bounds distance recorded more than 40 times, so there really is
 				// nothing there
 				// Make a sharper and
@@ -149,13 +149,13 @@ public class PController implements UltrasonicController {
 					error = 15;
 				}
 
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 50 - CONSTANT * error); // slow down left motor
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 30 - CONSTANT * error); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up right motor
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 			} else { // if sensor needs more time to complete filter
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 2); // slow down left motor
-				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 2); // slow down right motor
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 3); // slow down left motor
+				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 3); // slow down right motor
 				// proceeds to slow robot down in straight line, giving it more time to complete
 				// filter without it moving too far
 				// away from wall
