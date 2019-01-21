@@ -1,6 +1,9 @@
 # ECSE211DPM-EV3 #
 ECSE 211 Design Principles and Methods.
 
+## Total Time Spent = 26 hrs ##
+- WallFollowingLab = 26 hours
+
 ## Notes ##
 __Battery Pack__
 - Red & Green LED: Battery is charging
