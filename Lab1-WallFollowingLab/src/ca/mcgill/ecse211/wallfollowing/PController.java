@@ -48,7 +48,7 @@ public class PController implements UltrasonicController {
 	private int error;
 
 	public PController(int bandCenter, int bandWidth) {
-		this.bandCenter = bandCenter - 3;
+		this.bandCenter = bandCenter - 2;
 		this.bandWidth = bandWidth - 1;
 		this.tally = 0;
 		this.error = 0;
@@ -124,7 +124,7 @@ public class PController implements UltrasonicController {
 			// this is for corners
 			// turn left faster, robot at edge
 			// check tally
-			if (tally > 45) {
+			if (tally > 40) {
 				// out of bounds distance recorded more than 40 times, so there really is
 				// nothing there
 				// Make a sharper and
@@ -133,11 +133,11 @@ public class PController implements UltrasonicController {
 				// Control upper bound of error to protect motor
 				// When there is no object the sensor returns 2147483647
 				// which may destroy the motor if rpm is too high
-				if (error > 20) {
-					error = 20;
+				if (error > 15) {
+					error = 15;
 				}
 
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 50 - CONSTANT * error); // slow down left motor
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 25 - CONSTANT * error); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up right motor
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
