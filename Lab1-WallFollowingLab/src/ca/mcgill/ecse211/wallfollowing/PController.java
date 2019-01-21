@@ -32,9 +32,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * Lab Group: 43
  * 
  * @author1 Erica De Petrillo <br>
- *          McGill ID: 260432677
  * @author2 Raymond Yang <br>
- *          McGill ID: 260777792
  */
 
 public class PController implements UltrasonicController {
