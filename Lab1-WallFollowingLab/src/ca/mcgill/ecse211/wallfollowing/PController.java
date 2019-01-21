@@ -182,7 +182,7 @@ public class PController implements UltrasonicController {
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
 
-				if (this.distance < 10) {
+				if (this.distance < 12) {
 					try {
 						Thread.sleep(175);
 					} catch (Exception e) {
@@ -215,7 +215,7 @@ public class PController implements UltrasonicController {
 					error = 15;
 				}
 
-				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 30 - CONSTANT * error); // slow down left motor
+				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + 60 - CONSTANT * error); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up right motor
 				WallFollowingLab.rightMotor.forward();
 				WallFollowingLab.leftMotor.forward();
