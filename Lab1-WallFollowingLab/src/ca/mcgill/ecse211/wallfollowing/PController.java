@@ -54,14 +54,14 @@ public class PController implements UltrasonicController {
 	/**
 	 * The normal speed of the left and right motor when following the wall.
 	 */
-	private static final int MOTOR_SPEED = 250; // normal speed
+	private static final int MOTOR_SPEED = 250; 
 
 	/**
 	 * The upper limit for the distance readings from the ultrasonic sensor, any
 	 * value above this limit would be identified as a potential false negative,
 	 * tally would be activated.
 	 */
-	private static final int BOUND = 160; // any distance above 160 will be considered out of bounds
+	private static final int BOUND = 160;
 
 	/**
 	 * The constant is an integer amplification applied to the error (difference
