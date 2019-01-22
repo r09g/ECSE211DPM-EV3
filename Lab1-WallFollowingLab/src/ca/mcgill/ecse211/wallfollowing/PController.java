@@ -59,9 +59,9 @@ public class PController implements UltrasonicController {
 	/**
 	 * The upper limit for the distance readings from the ultrasonic sensor, any
 	 * value above this limit would be identified as a potential false negative,
-	 * filter would be activated.
+	 * tally would be activated.
 	 */
-	private static final int BOUND = 160;
+	private static final int BOUND = 160; // any distance above 160 will be considered out of bounds
 
 	/**
 	 * The constant is an integer amplification applied to the error (difference
@@ -99,10 +99,10 @@ public class PController implements UltrasonicController {
 	 * The number of times the robot's ultrasonic sensor gives a reading larger than
 	 * the {@link #BOUND}, consecutively. This variable helps the robot determine
 	 * whether it is at a corner (and turn left), or simply passing a wall gap (and
-	 * go straight). This variable plays an important role in implementing a filter
+	 * go straight). This variable plays an important role in implementing a tally
 	 * mechanism.
 	 */
-	private int filter;
+	private int tally;
 
 	/**
 	 * The absolute difference between the current distance measured by the
@@ -131,7 +131,7 @@ public class PController implements UltrasonicController {
 	public PController(int bandCenter, int bandWidth) {
 		this.bandCenter = bandCenter - 3; // band center adjustment
 		this.bandWidth = bandWidth;
-		this.filter = 0;
+		this.tally = 0;
 		this.error = 0;
 		WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // initial left motor speed
 		WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED); // initial right motor speed
@@ -155,17 +155,17 @@ public class PController implements UltrasonicController {
 	 * {@link #MOTOR_SPEED}
 	 * 
 	 * <p>
-	 * A filter is implemented in this class to 1) Filter out false negatives and
+	 * A tally is implemented in this class to 1) tally out false negatives and
 	 * prevent unnecessary left/right oscillations of the robot, 2) distinguish
-	 * between wall gap and edge of wall. The filter functions when the input is
+	 * between wall gap and edge of wall. The tally functions when the input is
 	 * above the {@link BOUND}. At a particular angle to the wall, the sensor gives
 	 * a false negative with value 2147483647. Specifically, the robot suddenly
 	 * slows down to 1/3 of its original speed and moves in a straight path while
-	 * the filter counts the number of consecutive occurrences of distance inputs
-	 * over {@code BOUND}, resulting in a sudden decrease in speed. If the filter
-	 * count is interrupted by an input value lower than {@code BOUND}, the filter
+	 * the tally counts the number of consecutive occurrences of distance inputs
+	 * over {@code BOUND}, resulting in a sudden decrease in speed. If the tally
+	 * count is interrupted by an input value lower than {@code BOUND}, the tally
 	 * resets to 0 and the robot adjusts the motor speeds depending on the input; if
-	 * the filter count (30) is satisfied, there is probably nothing there and the
+	 * the tally count (30) is satisfied, there is probably nothing there and the
 	 * robot turns left, with speed adjustments that are in accordance with the
 	 * p-type controller logic. When performing the left turn, the left motor speed
 	 * is increased by 60 rpm in addition to the proportional adjustment to allow
@@ -199,7 +199,7 @@ public class PController implements UltrasonicController {
 		this.distance = distance;
 
 		if (this.distance < BOUND) { // distance within 160 cm
-			filter = 0; // reset filter
+			tally = 0; // reset tally
 			error = Math.abs(this.distance - this.bandCenter); // absolute difference between robot and wall
 
 			if (error > 20) { // error cap to protect motor
@@ -210,7 +210,7 @@ public class PController implements UltrasonicController {
 
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - CONSTANT * error); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up right motor
-
+				//proceed to turn left, moving closer to wall
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 
@@ -218,7 +218,7 @@ public class PController implements UltrasonicController {
 
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - CONSTANT * error); // slow down right motor
-
+				//proceed to turn right, moving away from wall
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 
@@ -233,14 +233,14 @@ public class PController implements UltrasonicController {
 			} else { // the robot is within the bandwidth
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // set left motor at 250 rpm
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED); // set right motor at 250 rpm
-
+				//robot keeps going straight
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 			}
 		} else { // distance over 160
-			filter++; // increment filter count
+			tally++; // increment tally count
 
-			if (filter > 30) { // >30 consecutive large distance readings, probably really nothing there
+			if (tally > 30) { // >30 consecutive large distance readings, probably really nothing there
 				error = Math.abs(this.distance - this.bandCenter); // absolute value of distance between wall and robot
 
 				if (error > 15) { // cap the error to protect motor
@@ -252,10 +252,10 @@ public class PController implements UltrasonicController {
 
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
-			} else { // filter count less than 30
+			} else { // tally count less than 30
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 3); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 3); // slow down right motor
-
+				//robot keeps going straight
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 			}
