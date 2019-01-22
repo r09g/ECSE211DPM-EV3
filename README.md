@@ -2,7 +2,7 @@
 ECSE 211 Design Principles and Methods.
 
 ## Total Time Spent = 26 hrs ##
-- WallFollowingLab = 26 hours
+- WallFollowingLab = 32 hours
 
 ## Notes ##
 __Battery Pack__
