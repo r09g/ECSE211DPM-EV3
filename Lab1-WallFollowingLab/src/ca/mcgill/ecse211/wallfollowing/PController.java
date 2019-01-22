@@ -121,9 +121,10 @@ public class PController implements UltrasonicController {
 	 * are set, but forward movement is only started after sensor thread is started
 	 * in the WallFollowingLab class.
 	 * 
-	 * @param bandCenter distance for the robot to keep from the wall in centimeters
-	 * @param bandWidth  range where the robot does not make adjustments to the
-	 *                   motor speed in centimeters
+	 * @param bandCenter type int indicating distance for the robot to keep from the
+	 *                   wall in centimeters
+	 * @param bandWidth  type int indicating range where the robot does not make
+	 *                   adjustments to the motor speed in centimeters
 	 * 
 	 * @see WallFollowingLab
 	 */
@@ -192,6 +193,8 @@ public class PController implements UltrasonicController {
 	 * @param distance an int representing the distance between the robot and the
 	 *                 wall measured by the ultrasonic sensor, measured by the
 	 *                 ultrasonic sensor at 45 degres to the wall.
+	 * 
+	 * @see java.lang.Thread#sleep(long)
 	 */
 	@Override
 	public void processUSData(int distance) {
@@ -266,8 +269,8 @@ public class PController implements UltrasonicController {
 	 * A wrapper method which returns the value of the local private class variable
 	 * {@code distance}
 	 * 
-	 * @return this.distance the distance measured by the ultrasonic sensor at ~45
-	 *         degrees from the robot to the wall
+	 * @return this.distance an int representing the distance measured by the
+	 *         ultrasonic sensor at ~45 degrees from the robot to the wall
 	 */
 	@Override
 	public int readUSDistance() {
