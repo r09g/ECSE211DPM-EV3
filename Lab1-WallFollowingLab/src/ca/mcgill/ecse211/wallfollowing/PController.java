@@ -119,7 +119,8 @@ public class PController implements UltrasonicController {
 	 * Constructor that creates an instance of the PController class and initializes
 	 * the class variables. The initial speed of the robot's left and right motors
 	 * are set, but forward movement is only started after sensor thread is started
-	 * in the WallFollowingLab class.
+	 * in the WallFollowingLab class. The bandWidth is increased to allow safety
+	 * clearance from wall.
 	 * 
 	 * @param bandCenter type int indicating distance for the robot to keep from the
 	 *                   wall in centimeters
@@ -130,7 +131,7 @@ public class PController implements UltrasonicController {
 	 */
 	public PController(int bandCenter, int bandWidth) {
 		this.bandCenter = bandCenter;
-		this.bandWidth = bandWidth;
+		this.bandWidth = bandWidth + 2;
 		this.tally = 0;
 		this.error = 0;
 		WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // initial left motor speed
@@ -179,7 +180,7 @@ public class PController implements UltrasonicController {
 	 * <p>
 	 * A call to {@code Thread.sleep()} is also when the robot is too close to the
 	 * wall, at a distance less than 12. The robot then sets the motor speeds to
-	 * turns right and this thread is suspended for 175 ms, thus no new actions are
+	 * turns right and this thread is suspended for 200 ms, thus no new actions are
 	 * performed within the time interval. However, the {@code Thread.sleep()}
 	 * method must be wrapped in a try-catch block as the method throws
 	 * {@code InterruptedException}, a checked exception that must be caught.
@@ -226,7 +227,7 @@ public class PController implements UltrasonicController {
 
 				if (this.distance < 12) { // robot is very close to the wall
 					try { // try-catch block, sleep method throws an exception
-						Thread.sleep(175); // suspend thread to allow motor to turn right longer
+						Thread.sleep(200); // suspend thread to allow motor to turn right longer
 					} catch (Exception e) {
 
 					}
@@ -265,13 +266,6 @@ public class PController implements UltrasonicController {
 		return;
 	}
 
-	/**
-	 * A wrapper method which returns the value of the local private class variable
-	 * {@code distance}
-	 * 
-	 * @return this.distance an int representing the distance measured by the
-	 *         ultrasonic sensor at ~45 degrees from the robot to the wall
-	 */
 	@Override
 	public int readUSDistance() {
 		return this.distance;
