@@ -266,6 +266,13 @@ public class PController implements UltrasonicController {
 		return;
 	}
 
+	/**
+	 * A wrapper method which returns the value of the local private class variable
+	 * {@code distance}
+	 * 
+	 * @return this.distance an int of the distance measured by the ultrasonic
+	 *         sensor at ~45 degrees from the robot to the wall
+	 */
 	@Override
 	public int readUSDistance() {
 		return this.distance;
