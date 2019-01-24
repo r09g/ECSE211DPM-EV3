@@ -3,14 +3,15 @@ package ca.mcgill.ecse211.wallfollowing;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
- * This class specifies the proportional-type controller for the EV3 robot. This
- * type of controller adjusts the direction of the robot through making
- * adjustments that are proportional to the error, which is the absolute value
- * of the difference between the current distance from the wall and the optimal
- * distance from the wall. Ideally, the PController should achieve the purpose
- * of reducing oscillations until they are at insignificant magnitudes. However,
- * the effectiveness of this implementation depends heavily on the accuracy of
- * the ultrasonic sensor itself.
+ * This class specifies the proportional-type controller for the EV3 robot. The
+ * robot moves in a counter-clockwise direction and sensor is on the left side
+ * of the robot. This type of controller adjusts the direction of the robot
+ * through making adjustments that are proportional to the error, which is the
+ * absolute value of the difference between the current distance from the wall
+ * and the optimal distance from the wall. Ideally, the PController should
+ * achieve the purpose of reducing oscillations until they are at insignificant
+ * magnitudes. However, the effectiveness of this implementation depends heavily
+ * on the accuracy of the ultrasonic sensor itself.
  * 
  * <p>
  * This class implements the UltrasonicController interface and implements the
@@ -54,14 +55,14 @@ public class PController implements UltrasonicController {
 	/**
 	 * The normal speed of the left and right motor when following the wall.
 	 */
-	private static final int MOTOR_SPEED = 250; // normal speed
+	private static final int MOTOR_SPEED = 250;
 
 	/**
 	 * The upper limit for the distance readings from the ultrasonic sensor, any
 	 * value above this limit would be identified as a potential false negative,
 	 * tally would be activated.
 	 */
-	private static final int BOUND = 160; // any distance above 160 will be considered out of bounds
+	private static final int BOUND = 160;
 
 	/**
 	 * The constant is an integer amplification applied to the error (difference
@@ -91,7 +92,7 @@ public class PController implements UltrasonicController {
 	private final int bandWidth;
 
 	/**
-	 * The distance read by the ultrasonic sensor
+	 * The distance read by the ultrasonic sensor from the robot to wall
 	 */
 	private int distance;
 
@@ -116,21 +117,21 @@ public class PController implements UltrasonicController {
 
 	/**
 	 * Constructor that creates an instance of the PController class and initializes
-	 * the class variables. The {@code bandCenter} is adjusted by -3 with respect to
-	 * the initial input to tune the robot to its best performance. This makes the
-	 * robot stay closer to the wall. Note this adjustment should vary with
-	 * different robot and physical conditions (i.e. tires, dirt on ground, ground
-	 * material, and other factors).
+	 * the class variables. The initial speed of the robot's left and right motors
+	 * are set, but forward movement is only started after sensor thread is started
+	 * in the WallFollowingLab class. The bandWidth is increased to allow safety
+	 * clearance from wall.
 	 * 
-	 * @param bandCenter distance for the robot to keep from the wall in centimeters
-	 * @param bandWidth  range where the robot does not make adjustments to the
-	 *                   motor speed in centimeters
+	 * @param bandCenter type int indicating distance for the robot to keep from the
+	 *                   wall in centimeters
+	 * @param bandWidth  type int indicating range where the robot does not make
+	 *                   adjustments to the motor speed in centimeters
 	 * 
 	 * @see WallFollowingLab
 	 */
 	public PController(int bandCenter, int bandWidth) {
-		this.bandCenter = bandCenter - 3; // band center adjustment
-		this.bandWidth = bandWidth;
+		this.bandCenter = bandCenter;
+		this.bandWidth = bandWidth + 2;
 		this.tally = 0;
 		this.error = 0;
 		WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // initial left motor speed
@@ -179,7 +180,7 @@ public class PController implements UltrasonicController {
 	 * <p>
 	 * A call to {@code Thread.sleep()} is also when the robot is too close to the
 	 * wall, at a distance less than 12. The robot then sets the motor speeds to
-	 * turns right and this thread is suspended for 175 ms, thus no new actions are
+	 * turns right and this thread is suspended for 200 ms, thus no new actions are
 	 * performed within the time interval. However, the {@code Thread.sleep()}
 	 * method must be wrapped in a try-catch block as the method throws
 	 * {@code InterruptedException}, a checked exception that must be caught.
@@ -193,6 +194,8 @@ public class PController implements UltrasonicController {
 	 * @param distance an int representing the distance between the robot and the
 	 *                 wall measured by the ultrasonic sensor, measured by the
 	 *                 ultrasonic sensor at 45 degres to the wall.
+	 * 
+	 * @see java.lang.Thread#sleep(long)
 	 */
 	@Override
 	public void processUSData(int distance) {
@@ -210,7 +213,7 @@ public class PController implements UltrasonicController {
 
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - CONSTANT * error); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up right motor
-				//proceed to turn left, moving closer to wall
+				// proceed to turn left, moving closer to wall
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 
@@ -218,13 +221,13 @@ public class PController implements UltrasonicController {
 
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + CONSTANT * error); // speed up left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - CONSTANT * error); // slow down right motor
-				//proceed to turn right, moving away from wall
+				// proceed to turn right, moving away from wall
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 
 				if (this.distance < 12) { // robot is very close to the wall
 					try { // try-catch block, sleep method throws an exception
-						Thread.sleep(175); // suspend thread to allow motor to turn right longer
+						Thread.sleep(200); // suspend thread to allow motor to turn right longer
 					} catch (Exception e) {
 
 					}
@@ -233,7 +236,7 @@ public class PController implements UltrasonicController {
 			} else { // the robot is within the bandwidth
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // set left motor at 250 rpm
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED); // set right motor at 250 rpm
-				//robot keeps going straight
+				// robot keeps going straight
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 			}
@@ -255,7 +258,7 @@ public class PController implements UltrasonicController {
 			} else { // tally count less than 30
 				WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / 3); // slow down left motor
 				WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / 3); // slow down right motor
-				//robot keeps going straight
+				// robot keeps going straight
 				WallFollowingLab.rightMotor.forward(); // EV3 motor hack
 				WallFollowingLab.leftMotor.forward();
 			}
@@ -267,8 +270,8 @@ public class PController implements UltrasonicController {
 	 * A wrapper method which returns the value of the local private class variable
 	 * {@code distance}
 	 * 
-	 * @return this.distance the distance measured by the ultrasonic sensor at ~45
-	 *         degrees from the robot to the wall
+	 * @return this.distance an int of the distance measured by the ultrasonic
+	 *         sensor at ~45 degrees from the robot to the wall
 	 */
 	@Override
 	public int readUSDistance() {

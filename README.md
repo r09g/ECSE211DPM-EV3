@@ -1,8 +1,8 @@
 # ECSE211DPM-EV3 #
 ECSE 211 Design Principles and Methods.
 
-## Total Time Spent = 26 hrs ##
-- WallFollowingLab = 26 hours
+## Total Time Spent = 32 hrs ##
+- WallFollowingLab = 32 hours
 
 ## Notes ##
 __Battery Pack__

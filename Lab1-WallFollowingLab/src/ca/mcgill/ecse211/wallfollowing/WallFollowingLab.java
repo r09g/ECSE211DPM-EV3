@@ -7,45 +7,51 @@ import lejos.hardware.port.Port;
 import lejos.robotics.SampleProvider;
 import lejos.hardware.Button;
 
+/**
+ * This class specifies the constants which control the behaviour of the robot.
+ * The class also creates instances of the motors and sensor, sets up the
+ * sensor, as well as the printer to give user option of choosing controller.
+ * Printer and ultrasonic sensor threads are started here and the motor is
+ * started here as well. Upon any button press on EV3 brick, the program
+ * terminates. Constant values are set based on testing and tweaking to achieve
+ * optimal robot performance.
+ */
 public class WallFollowingLab {
 
 	// Parameters: adjust these for desired performance
 
-	private static final int bandCenter = 35; // Offset from the wall (cm)
+	private static final int bandCenter = 32; // Offset from the wall (cm)
 	private static final int bandWidth = 3; // Width of dead band (cm)
 	private static final int motorLow = 175; // Speed of slower rotating wheel (deg/sec)
 	private static final int motorHigh = 275; // Speed of the faster rotating wheel (deg/seec)
-	//sensor on left of robot
+	// sensor on left of robot
 
+	// Sensor is in port 1, left motor in port A, right motor in port D
 	private static final Port usPort = LocalEV3.get().getPort("S1");
-	public static final EV3LargeRegulatedMotor leftMotor =
-			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-	public static final EV3LargeRegulatedMotor rightMotor =
-			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+	public static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+	public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 
 	// Main entry point - instantiate objects used and set up sensor
 
 	public static void main(String[] args) {
 
-		int option = 0;
+		int option = 0; // store controller type selected by user
 		Printer.printMainMenu(); // Set up the display on the EV3 screen
 		while (option == 0) // and wait for a button press. The button
 			option = Button.waitForAnyPress(); // ID (option) determines what type of control to use
 
 		// Setup controller objects
 
-		BangBangController bangbangController =
-				new BangBangController(bandCenter, bandWidth, motorLow, motorHigh);
+		BangBangController bangbangController = new BangBangController(bandCenter, bandWidth, motorLow, motorHigh);
 
-
-     PController pController = new PController(bandCenter, bandWidth);
-
+		PController pController = new PController(bandCenter, bandWidth);
 
 		// Setup ultrasonic sensor
 		// There are 4 steps involved:
 		// 1. Create a port object attached to a physical port (done already above)
 		// 2. Create a sensor instance and attach to port
-		// 3. Create a sample provider instance for the above and initialize operating mode
+		// 3. Create a sample provider instance for the above and initialize operating
+		// mode
 		// 4. Create a buffer for the sensor data
 
 		@SuppressWarnings("resource") // Because we don't bother to close this resource
@@ -62,7 +68,8 @@ public class WallFollowingLab {
 		// Setup Ultrasonic Poller // This thread samples the US and invokes
 		UltrasonicPoller usPoller = null; // the selected controller on each cycle
 
-		// Depending on which button was pressed, invoke the US poller and printer with the
+		// Depending on which button was pressed, invoke the US poller and printer with
+		// the
 		// appropriate constructor.
 
 		switch (option) {
@@ -83,7 +90,7 @@ public class WallFollowingLab {
 		// Start the poller and printer threads
 		usPoller.start();
 		printer.start();
-		
+
 		// start motor after sensor working
 		WallFollowingLab.leftMotor.forward();
 		WallFollowingLab.rightMotor.forward();
