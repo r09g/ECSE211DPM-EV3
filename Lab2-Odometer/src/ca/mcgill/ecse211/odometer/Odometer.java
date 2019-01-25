@@ -102,38 +102,13 @@ public class Odometer extends OdometerData implements Runnable {
     while (true) {
       updateStart = System.currentTimeMillis();
 
-      int leftMotorTachoCountNew = leftMotor.getTachoCount(); //in degrees
-      int rightMotorTachoCountNew = rightMotor.getTachoCount();
-      position = odoData.getXYT();
-      
-      int leftPhi = leftMotorTachoCountNew - leftMotorTachoCount;
-      int rightPhi = rightMotorTachoCountNew - rightMotorTachoCount;
-      
-      leftMotorTachoCount = leftMotorTachoCountNew; //updates the tacho count
-      rightMotorTachoCount = rightMotorTachoCountNew; //updates the tacho count
-      
-      int leftDistance = leftPhi/2046*100; //equivalent to dividing by 20.46 (to go from degrees to distance)
-      int rightDistance = rightPhi/2046*100;
-      
-      int distance = rightDistance - leftDistance;
-      int wheelBase = 13; //im not entirely sure what wheelbase is, but im assuming its the distance between the 2 wheels aka 6.62*2 ~ 13
-      
-      double radTheta = distance/wheelBase; //in radians
-      
-      double dTheta = radTheta*180/Math.PI; //in degrees
-      
-      double displacement = (leftDistance + rightDistance)/2;
-      double dx = displacement*Math.sin(position[2] + dTheta);
-      double dy = displacement*Math.cos(position[2] + dTheta);
+      leftMotorTachoCount = leftMotor.getTachoCount();
+      rightMotorTachoCount = rightMotor.getTachoCount();
 
       // TODO Calculate new robot position based on tachometer counts
-     
-      //choose robot facing right as 0 degrees, theta increases counter clockwise, just like for polar coordinates
-      
-      
       
       // TODO Update odometer values with new calculated values
-      odo.update(dx, dy, dTheta);
+      odo.update(0.5, 1.8, 20.1);
 
       // this ensures that the odometer only runs once every period
       updateEnd = System.currentTimeMillis();
