@@ -33,6 +33,13 @@ public class OdometryCorrection implements Runnable {
 
       // TODO Trigger correction (When do I have information to correct?)
       // TODO Calculate new (accurate) robot position
+      
+      /* y position can be corrected any time the light sensor passes through a horizontal gridline
+       * x position can be corrected any time the light sensor passes through a vertical gridline
+       * these correction are made by taking the difference between the light sensor's calculated position (with odometer)
+       * and the gridline and either adding this difference or subtracting it
+       * this cannot be done near gridline intersections
+       */
 
       // TODO Update odometer with new calculated (and more accurate) vales
 
