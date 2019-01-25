@@ -83,8 +83,8 @@ public class OdometerData {
 	 * @return the odometer data.
 	 */
 	public double[] getXYT() {
-		double[] position = new double[3];
-		lock.lock();
+		double[] position = new double[3];	// stores position data
+		lock.lock();	// acquire lock and control access to synchronize threads
 		try {
 			while (isReseting) { // If a reset operation is being executed, wait
 				// until it is over.
@@ -92,6 +92,7 @@ public class OdometerData {
 				// than simple busy wait.
 			}
 
+			// retrieved data
 			position[0] = x;
 			position[1] = y;
 			position[2] = theta;
@@ -100,7 +101,7 @@ public class OdometerData {
 			// Print exception to screen
 			e.printStackTrace();
 		} finally {
-			lock.unlock();
+			lock.unlock();		// release lock to and unblock access
 		}
 
 		return position;
@@ -116,8 +117,12 @@ public class OdometerData {
 	 * @param dtheta
 	 */
 	public void update(double dx, double dy, double dtheta) {
-		lock.lock();
-		isReseting = true;
+		
+		// thread synchronization
+		lock.lock();	// acquire lock
+		isReseting = true;	// flag to indicate currently resetting
+		
+		// update position values
 		try {
 			x += dx;
 			y += dy;
@@ -128,7 +133,7 @@ public class OdometerData {
 			doneReseting.signalAll(); // Let the other threads know that you are
 										// done reseting
 		} finally {
-			lock.unlock();
+			lock.unlock();	// release lock
 		}
 
 	}

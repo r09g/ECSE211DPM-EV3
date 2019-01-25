@@ -26,6 +26,7 @@ public class SquareDriver {
 	 */
 	public static void drive(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, double leftRadius,
 			double rightRadius, double track) {
+
 		// reset the motors
 		for (EV3LargeRegulatedMotor motor : new EV3LargeRegulatedMotor[] { leftMotor, rightMotor }) {
 			motor.stop();
@@ -40,10 +41,14 @@ public class SquareDriver {
 		}
 
 		for (int i = 0; i < 4; i++) {
+
 			// drive forward two tiles
 			leftMotor.setSpeed(FORWARD_SPEED);
 			rightMotor.setSpeed(FORWARD_SPEED);
 
+			// rotate( angle in degrees, return immediately or not)
+			// first motor returns immediately (set to TRUE)
+			// so both motors turn at same time
 			leftMotor.rotate(convertDistance(leftRadius, 2 * TILE_SIZE), true);
 			rightMotor.rotate(convertDistance(rightRadius, 2 * TILE_SIZE), false);
 
@@ -60,8 +65,11 @@ public class SquareDriver {
 	 * This method allows the conversion of a distance to the total rotation of each
 	 * wheel need to cover that distance.
 	 * 
-	 * @param radius
-	 * @param distance
+	 * (Distance / Wheel Circumference) = Number of wheel rotations. Number of
+	 * rotations * 360.0 degrees = Total number of degrees needed to turn.
+	 * 
+	 * @param radius   - Radius of the wheel
+	 * @param distance - Distance of path
 	 * @return
 	 */
 	private static int convertDistance(double radius, double distance) {

@@ -1,4 +1,3 @@
-// Lab2.java
 package ca.mcgill.ecse211.lab2;
 
 import ca.mcgill.ecse211.odometer.*;
@@ -6,18 +5,21 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.sensor.EV3ColorSensor; // import EV3 Color Sensor
 
 public class Lab2 {
 
 	// Motor Objects, and Robot related parameters
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
-	private static final TextLCD lcd = LocalEV3.get().getTextLCD();
-	public static final double WHEEL_RAD = 2.2;
+	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
+	public static final double WHEEL_RAD = 2.2; // wheel radius
 	public static final double TRACK = 17.0;
+	private static final EV3ColorSensor clrSensor = new EV3ColorSensor(LocalEV3.get().getPort("S1")); // EV3 color sensor
 
 	public static void main(String[] args) throws OdometerExceptions {
 
+		// records button clicked by user
 		int buttonChoice;
 
 		// Odometer related objects
@@ -27,6 +29,7 @@ public class Lab2 {
 																			// implementation
 		Display odometryDisplay = new Display(lcd); // No need to change
 
+		// ask user again if button clicked is not left or right
 		do {
 			// clear the display
 			lcd.clear();

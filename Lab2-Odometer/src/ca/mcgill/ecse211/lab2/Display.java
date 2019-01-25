@@ -42,12 +42,16 @@ public class Display implements Runnable {
 
 	public void run() {
 	
+		// clear EV3 display
 		lcd.clear();
 
 		long updateStart, updateEnd;
 
+		// record current time
 		long tStart = System.currentTimeMillis();
 		do {
+			
+			// record current time
 			updateStart = System.currentTimeMillis();
 
 			// Retrieve x, y and Theta information
@@ -60,14 +64,19 @@ public class Display implements Runnable {
 			lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2);
 
 			// this ensures that the data is updated only once every period
+			// record current time
 			updateEnd = System.currentTimeMillis();
+			
+			// check if time elapsed is shorter than required
 			if (updateEnd - updateStart < DISPLAY_PERIOD) {
 				try {
+					// suspend thread until time period satisfied
 					Thread.sleep(DISPLAY_PERIOD - (updateEnd - updateStart));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
+			// if loop takes too much time, stop program
 		} while ((updateEnd - tStart) <= timeout);
 
 	}
