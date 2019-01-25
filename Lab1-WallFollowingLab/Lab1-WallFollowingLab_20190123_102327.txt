@@ -1,4 +1,0 @@
-ERROR - 10:23:27: java.net.MalformedURLException: unknown protocol: pathmap
-ERROR - 10:23:45: java.io.FileNotFoundException: /Lab1-WallFollowingLab/.classpath (No such file or directory)
-ERROR - 10:23:45: java.io.FileNotFoundException: /Lab1-WallFollowingLab/.classpath (No such file or directory)
-ERROR - 10:24:27: java.net.MalformedURLException: unknown protocol: pathmap
