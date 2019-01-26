@@ -11,6 +11,7 @@
 package ca.mcgill.ecse211.odometer;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import java.math.*;
 
 public class Odometer extends OdometerData implements Runnable {
 
@@ -29,6 +30,7 @@ public class Odometer extends OdometerData implements Runnable {
 	private double[] position;
 
 	private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
+	private static final long WHEELBASE = 10;	// the distance between front and back wheels
 
 	/**
 	 * This is the default constructor of this class. It initiates all motors and
@@ -99,15 +101,49 @@ public class Odometer extends OdometerData implements Runnable {
 		long updateStart, updateEnd;
 
 		while (true) {
+
+			// get current time
 			updateStart = System.currentTimeMillis();
 
-			leftMotorTachoCount = leftMotor.getTachoCount();
-			rightMotorTachoCount = rightMotor.getTachoCount();
+			// get current position data
+			// [x, y, Theta]
+			position = odoData.getXYT();
+			
+			// retrieve current heading data
+			double curTheta = position[2];
+			
+			// get current TachoCount in degrees
+			int leftMotorTachoCountNew = leftMotor.getTachoCount();
+			int rightMotorTachoCountNew = rightMotor.getTachoCount();
 
-			// TODO Calculate new robot position based on tachometer counts
+			// degrees rotated for left and right
+			int leftPhi = leftMotorTachoCountNew - leftMotorTachoCount;
+			int rightPhi = rightMotorTachoCountNew - rightMotorTachoCount;
 
+			// save counts for next iteration
+			leftMotorTachoCount = leftMotorTachoCountNew;
+			rightMotorTachoCount = rightMotorTachoCountNew;
+
+			// convert angular displacement to linear displacement
+			double leftDistance = Math.PI * WHEEL_RAD * leftPhi / 180.0;
+			double rightDistance = Math.PI * WHEEL_RAD * rightPhi / 180.0;
+
+			// change in displacement of vehicle
+			double dDisp = 0.5 * (leftDistance + rightDistance);
+			
+			// change in heading in radians and convert to degrees
+			double radTheta = (leftDistance - rightDistance) / WHEELBASE;
+			double dTheta = radTheta * 180.0 / Math.PI;
+			
+			// update heading data
+			curTheta += dTheta;
+			
+			// compute x, y component of displacement
+			double dX = Math.sin(curTheta) * dDisp;
+			double dY = Math.cos(curTheta) * dDisp;
+			
 			// TODO Update odometer values with new calculated values
-			odo.update(0.5, 1.8, 20.1);
+			odo.update(dX, dY, dTheta);
 
 			// this ensures that the odometer only runs once every period
 			updateEnd = System.currentTimeMillis();
