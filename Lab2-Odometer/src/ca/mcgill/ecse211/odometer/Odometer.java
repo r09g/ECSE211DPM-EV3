@@ -23,14 +23,10 @@ public class Odometer extends OdometerData implements Runnable {
 	private int rightMotorTachoCount;
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
-	private double Theta;
-	private double X;
-	private double Y;
+	private double Theta; // heading in radians
 
 	private final double TRACK; // distance between left and right wheels
 	private final double WHEEL_RAD; // wheel radius
-
-	private double[] position; // current X,Y,Theta position data
 
 	private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
 	private static final double toRad = Math.PI / 180.0; // degrees -> radians conversion
@@ -57,8 +53,6 @@ public class Odometer extends OdometerData implements Runnable {
 		this.leftMotorTachoCount = 0;
 		this.rightMotorTachoCount = 0;
 		this.Theta = 0.0;
-		this.X = 0.0;
-		this.Y = 0.0;
 
 		this.TRACK = TRACK;
 		this.WHEEL_RAD = WHEEL_RAD;
@@ -137,18 +131,14 @@ public class Odometer extends OdometerData implements Runnable {
 
 			// update heading
 			Theta += radTheta;
-						
+
 			// compute x, y component of displacement
 			// sin and cos uses radian
 			double dX = Math.sin(Theta) * dDisp;
 			double dY = Math.cos(Theta) * dDisp;
-			
+
 			// TODO Update odometer values with new calculated values
 			odo.update(dX, dY, radTheta * toDeg);
-			
-			// update X and Y
-			X += dX;
-			Y += dY;
 
 			// this ensures that the odometer only runs once every period
 			updateEnd = System.currentTimeMillis();
