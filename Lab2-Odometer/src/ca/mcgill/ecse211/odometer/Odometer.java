@@ -24,13 +24,13 @@ public class Odometer extends OdometerData implements Runnable {
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
 
-	private final double TRACK;	// distance between left and right wheels
-	private final double WHEEL_RAD;	// wheel radius
+	private final double TRACK; // distance between left and right wheels
+	private final double WHEEL_RAD; // wheel radius
 
 	private double[] position; // current X,Y,Theta position data
 
 	private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
-	
+
 	/**
 	 * This is the default constructor of this class. It initiates all motors and
 	 * variables once.It cannot be accessed externally.
@@ -107,10 +107,10 @@ public class Odometer extends OdometerData implements Runnable {
 			// get current position data
 			// [x, y, Theta]
 			position = odoData.getXYT();
-			
+
 			// retrieve current heading data
 			double curTheta = position[2];
-			
+
 			// get current TachoCount in degrees
 			int leftMotorTachoCountNew = leftMotor.getTachoCount();
 			int rightMotorTachoCountNew = rightMotor.getTachoCount();
@@ -129,18 +129,18 @@ public class Odometer extends OdometerData implements Runnable {
 
 			// change in displacement of vehicle
 			double dDisp = 0.5 * (leftDistance + rightDistance);
-			
+
 			// change in heading in radians and convert to degrees
 			double radTheta = (leftDistance - rightDistance) / TRACK;
 			double dTheta = radTheta * 180.0 / Math.PI;
-			
+
 			// update heading data
 			curTheta += dTheta;
-			
+
 			// compute x, y component of displacement
 			double dX = Math.sin(curTheta) * dDisp;
 			double dY = Math.cos(curTheta) * dDisp;
-			
+
 			// TODO Update odometer values with new calculated values
 			odo.update(dX, dY, dTheta);
 
