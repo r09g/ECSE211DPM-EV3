@@ -23,6 +23,9 @@ public class Odometer extends OdometerData implements Runnable {
 	private int rightMotorTachoCount;
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
+	private double Theta;
+	private double X;
+	private double Y;
 
 	private final double TRACK; // distance between left and right wheels
 	private final double WHEEL_RAD; // wheel radius
@@ -53,6 +56,9 @@ public class Odometer extends OdometerData implements Runnable {
 
 		this.leftMotorTachoCount = 0;
 		this.rightMotorTachoCount = 0;
+		this.Theta = 0.0;
+		this.X = 0.0;
+		this.Y = 0.0;
 
 		this.TRACK = TRACK;
 		this.WHEEL_RAD = WHEEL_RAD;
@@ -106,13 +112,6 @@ public class Odometer extends OdometerData implements Runnable {
 			// get current time
 			updateStart = System.currentTimeMillis();
 
-			// get current position data
-			// [x, y, Theta]
-			position = odoData.getXYT();
-
-			// retrieve current heading data
-			double Theta = position[2];
-
 			// get current TachoCount in degrees
 			int leftMotorTachoCountNew = leftMotor.getTachoCount();
 			int rightMotorTachoCountNew = rightMotor.getTachoCount();
@@ -132,12 +131,12 @@ public class Odometer extends OdometerData implements Runnable {
 			// change in displacement of vehicle
 			double dDisp = 0.5 * (leftDistance + rightDistance);
 
-			// change in heading in radians and convert to degrees
+			// change in heading in radians
 			double radTheta = (leftDistance - rightDistance) / TRACK;
-			double dTheta = radTheta * toDeg;
+//			double dTheta = radTheta * toDeg;
 
-			// update heading data in degrees
-			Theta += dTheta;
+			// update heading
+			Theta += radTheta;
 						
 			// compute x, y component of displacement
 			// sin and cos uses radian
@@ -145,7 +144,11 @@ public class Odometer extends OdometerData implements Runnable {
 			double dY = Math.cos(Theta) * dDisp;
 			
 			// TODO Update odometer values with new calculated values
-			odo.update(dX, dY, dTheta);
+			odo.update(dX, dY, radTheta * toDeg);
+			
+			// update X and Y
+			X += dX;
+			Y += dY;
 
 			// this ensures that the odometer only runs once every period
 			updateEnd = System.currentTimeMillis();
