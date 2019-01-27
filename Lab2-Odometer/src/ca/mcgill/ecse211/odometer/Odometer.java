@@ -30,6 +30,8 @@ public class Odometer extends OdometerData implements Runnable {
 	private double[] position; // current X,Y,Theta position data
 
 	private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
+	private static final double toRad = Math.PI / 180.0; // degrees -> radians conversion
+	private static final double toDeg = 180.0 / Math.PI; // radians -> degrees conversion
 
 	/**
 	 * This is the default constructor of this class. It initiates all motors and
@@ -109,7 +111,7 @@ public class Odometer extends OdometerData implements Runnable {
 			position = odoData.getXYT();
 
 			// retrieve current heading data
-			double curTheta = position[2];
+			double Theta = position[2];
 
 			// get current TachoCount in degrees
 			int leftMotorTachoCountNew = leftMotor.getTachoCount();
@@ -124,23 +126,24 @@ public class Odometer extends OdometerData implements Runnable {
 			rightMotorTachoCount = rightMotorTachoCountNew;
 
 			// convert angular displacement to linear displacement
-			double leftDistance = Math.PI * WHEEL_RAD * leftPhi / 180.0;
-			double rightDistance = Math.PI * WHEEL_RAD * rightPhi / 180.0;
+			double leftDistance = WHEEL_RAD * leftPhi * toRad;
+			double rightDistance = WHEEL_RAD * rightPhi * toRad;
 
 			// change in displacement of vehicle
 			double dDisp = 0.5 * (leftDistance + rightDistance);
 
 			// change in heading in radians and convert to degrees
 			double radTheta = (leftDistance - rightDistance) / TRACK;
-			double dTheta = radTheta * 180.0 / Math.PI;
+			double dTheta = radTheta * toDeg;
 
-			// update heading data
-			curTheta += dTheta;
-
+			// update heading data in degrees
+			Theta += dTheta;
+						
 			// compute x, y component of displacement
-			double dX = Math.sin(curTheta) * dDisp;
-			double dY = Math.cos(curTheta) * dDisp;
-
+			// sin and cos uses radian
+			double dX = Math.sin(Theta) * dDisp;
+			double dY = Math.cos(Theta) * dDisp;
+			
 			// TODO Update odometer values with new calculated values
 			odo.update(dX, dY, dTheta);
 

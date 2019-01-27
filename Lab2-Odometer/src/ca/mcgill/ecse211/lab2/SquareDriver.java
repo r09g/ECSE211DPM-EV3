@@ -42,20 +42,22 @@ public class SquareDriver {
 
 		for (int i = 0; i < 4; i++) {
 
-			// drive forward two tiles
+			// set driving speed
 			leftMotor.setSpeed(FORWARD_SPEED);
 			rightMotor.setSpeed(FORWARD_SPEED);
 
-			// rotate( angle in degrees, return immediately or not)
-			// first motor returns immediately (set to TRUE)
-			// so both motors turn at same time
+			// drive forward for 2 tiles
+			// both motors rotate together in same angle = move forward
 			leftMotor.rotate(convertDistance(leftRadius, 2 * TILE_SIZE), true);
 			rightMotor.rotate(convertDistance(rightRadius, 2 * TILE_SIZE), false);
 
-			// turn 90 degrees clockwise
+			// set rotating speed 
 			leftMotor.setSpeed(ROTATE_SPEED);
 			rightMotor.setSpeed(ROTATE_SPEED);
 
+			// rotate( angle in degrees, return immediately or not )
+			// so both motors turn at same time
+			// turn 90 degrees clockwise
 			leftMotor.rotate(convertAngle(leftRadius, track, 90.0), true);
 			rightMotor.rotate(-convertAngle(rightRadius, track, 90.0), false);
 		}
