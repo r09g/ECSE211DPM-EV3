@@ -38,7 +38,7 @@ public class OdometryCorrection implements Runnable {
 
 		Port csPort = LocalEV3.get().getPort("S1");
 		SensorModes csSensor = new EV3UltrasonicSensor(csPort); // usSensor is the instance
-		SampleProvider csColor = csSensor.getMode("Color ID"); // csDistance provides samples from
+		SampleProvider csColor = csSensor.getMode("Color ID"); // csColor provides samples from
 		// this instance
 		float[] csData = new float[csColor.sampleSize()]; // csData is the buffer in which data are
 		// returned
@@ -66,7 +66,7 @@ public class OdometryCorrection implements Runnable {
 					prevTheta = position[2];
 				}
 
-				if (position[2] == 0 || position[2] == 180) { // robot moving horizontally
+				if ((position[2] > 350 && position[2] < 10) || (position[2] > 170 && position[2] < 190)) { // robot moving horizontally
 					// adjust x coordinate
 					difference = Math.abs((position[0] - TILE * count));
 					if (position[0] < TILE * count) {
@@ -74,7 +74,7 @@ public class OdometryCorrection implements Runnable {
 					} else {
 						dx = 0 - difference; // we will need to subtract the difference to the calculated position
 					}
-				} else if (position[2] == 90 || position[2] == 270) { // robot moving vertically
+				} else if ((position[2] > 80 && position[2] < 100) || (position[2] > 260 && position[2] < 280)) { // robot moving vertically
 					// adjust y coordinate
 					difference = Math.abs((position[1] - TILE * count));
 					if (position[1] < TILE * count) {
