@@ -6,16 +6,13 @@ package ca.mcgill.ecse211.odometer;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.*;
-
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-
 import lejos.robotics.SampleProvider;
 import lejos.hardware.Button;
 
 public class OdometryCorrection implements Runnable {
 	private static final long CORRECTION_PERIOD = 10;
 	private Odometer odometer;
-	private static final EV3ColorSensor clrSensor = new EV3ColorSensor(LocalEV3.get().getPort("S1"));
 	private static final double TILE = 30.48; // length of 1 tile in cm
 
 	/**
@@ -38,15 +35,10 @@ public class OdometryCorrection implements Runnable {
 	// run method (required for Thread)
 	public void run() {
 		long correctionStart, correctionEnd;
-		// Setup ultrasonic sensor
-		// There are 4 steps involved:
-		// 1. Create a port object attached to a physical port
-		// 2. Create a sensor instance and attach to port
-		// 3. Create a sample provider instance for the above and initialize operating
-		// mode
-		// 4. Create a buffer for the sensor data
 
-		SampleProvider csColor = clrSensor.getMode("Color ID"); // csDistance provides samples from
+		Port csPort = LocalEV3.get().getPort("S1");
+		SensorModes csSensor = new EV3UltrasonicSensor(csPort); // usSensor is the instance
+		SampleProvider csColor = csSensor.getMode("Color ID"); // csDistance provides samples from
 		// this instance
 		float[] csData = new float[csColor.sampleSize()]; // csData is the buffer in which data are
 		// returned
