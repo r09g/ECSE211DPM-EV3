@@ -19,19 +19,18 @@ public class Odometer extends OdometerData implements Runnable {
 	private static Odometer odo = null; // Returned as singleton
 
 	// Motors and related variables
-	private int leftMotorTachoCount;
+	private int leftMotorTachoCount; // total degrees turned
 	private int rightMotorTachoCount;
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
 
-	private final double TRACK;
-	private final double WHEEL_RAD;
+	private final double TRACK;	// distance between left and right wheels
+	private final double WHEEL_RAD;	// wheel radius
 
-	private double[] position;
+	private double[] position; // current X,Y,Theta position data
 
 	private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
-	private static final long WHEELBASE = 10;	// the distance between front and back wheels
-
+	
 	/**
 	 * This is the default constructor of this class. It initiates all motors and
 	 * variables once.It cannot be accessed externally.
@@ -132,7 +131,7 @@ public class Odometer extends OdometerData implements Runnable {
 			double dDisp = 0.5 * (leftDistance + rightDistance);
 			
 			// change in heading in radians and convert to degrees
-			double radTheta = (leftDistance - rightDistance) / WHEELBASE;
+			double radTheta = (leftDistance - rightDistance) / TRACK;
 			double dTheta = radTheta * 180.0 / Math.PI;
 			
 			// update heading data
