@@ -127,7 +127,6 @@ public class Odometer extends OdometerData implements Runnable {
 
 			// change in heading in radians
 			double radTheta = (leftDistance - rightDistance) / TRACK;
-//			double dTheta = radTheta * toDeg;
 
 			// update heading
 			Theta += radTheta;
@@ -138,6 +137,7 @@ public class Odometer extends OdometerData implements Runnable {
 			double dY = Math.cos(Theta) * dDisp;
 
 			// TODO Update odometer values with new calculated values
+			// theta is in degrees
 			odo.update(dX, dY, radTheta * toDeg);
 
 			// this ensures that the odometer only runs once every period
