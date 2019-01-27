@@ -38,7 +38,7 @@ public class OdometryCorrection implements Runnable {
 
 		Port csPort = LocalEV3.get().getPort("S1");
 		SensorModes csSensor = new EV3UltrasonicSensor(csPort); // usSensor is the instance
-		SampleProvider csColor = csSensor.getMode("Color ID"); // csColor provides samples from
+		SampleProvider csColor = csSensor.getMode("RGB"); // csColor provides samples from
 		// this instance
 		float[] csData = new float[csColor.sampleSize()]; // csData is the buffer in which data are
 		// returned
@@ -57,7 +57,7 @@ public class OdometryCorrection implements Runnable {
 
 			// TODO Trigger correction (When do I have information to correct?)
 			// TODO Calculate new (accurate) robot position
-			if (csData[0] == 1) { // 1 refers to BLACK according to LeJOS API
+			if (csData[0] * 1000 < 300) { // 1 refers to BLACK according to LeJOS API
 				if (prevTheta == position[2]) { // if robot still in the same line
 					count++;
 					prevTheta = position[2];
@@ -65,7 +65,7 @@ public class OdometryCorrection implements Runnable {
 					count = 1;
 					prevTheta = position[2];
 				}
-
+				
 				if ((position[2] > 350 && position[2] < 10) || (position[2] > 170 && position[2] < 190)) { // robot moving horizontally
 					// adjust x coordinate
 					difference = Math.abs((position[0] - TILE * count));
