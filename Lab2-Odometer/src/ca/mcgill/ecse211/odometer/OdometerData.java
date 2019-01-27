@@ -129,6 +129,7 @@ public class OdometerData {
 			theta = (theta + (360 + dtheta) % 360) % 360; // keeps the updates
 															// within 360
 															// degrees
+
 			isReseting = false; // Done reseting
 			doneReseting.signalAll(); // Let the other threads know that you are
 										// done reseting

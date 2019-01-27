@@ -5,13 +5,14 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.sensor.EV3ColorSensor; // import EV3 Color Sensor
+import lejos.hardware.port.Port;
 
 public class Lab2 {
 
 	// Motor Objects, and Robot related parameters
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
 	public static final double WHEEL_RAD = 2.1; // wheel radius
 	public static final double TRACK = 13.3; // distance between left and right wheels
@@ -20,7 +21,7 @@ public class Lab2 {
 
 		// records button clicked by user
 		int buttonChoice;
-
+			
 		// Odometer related objects
 		Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); // TODO Complete
 																							// implementation
