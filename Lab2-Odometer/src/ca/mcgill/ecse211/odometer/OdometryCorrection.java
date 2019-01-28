@@ -36,7 +36,7 @@ public class OdometryCorrection implements Runnable {
 		this.cs = csSensor.getMode("Red");
 		this.csData = new float[cs.sampleSize()];
 		
-		Sound.setVolume(100);
+		Sound.setVolume(50);
 
 	}
 
@@ -84,7 +84,7 @@ public class OdometryCorrection implements Runnable {
 					// moving +Y
 					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
-					Y = Y - difference - 8.5; // correction
+					Y = Y - difference; // correction
 
 					countY++;	// black line
 					
@@ -96,7 +96,7 @@ public class OdometryCorrection implements Runnable {
 					countY--;
 					
 					difference = Y - (TILE * countY);
-					Y = Y - difference + 8.5; // correction
+					Y = Y - difference + 3; // correction
 					
 					odometer.setY(Y);
 					

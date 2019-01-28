@@ -4,6 +4,7 @@
 package ca.mcgill.ecse211.lab2;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.Sound;
 
 /**
  * This class is used to drive the robot on the demo floor.
@@ -48,8 +49,8 @@ public class SquareDriver {
 
 			// drive forward for 3 tiles
 			// both motors rotate together in same angle = move forward
-			leftMotor.rotate(convertDistance(leftRadius, 2.9 * TILE_SIZE), true);
-			rightMotor.rotate(convertDistance(rightRadius, 2.9 * TILE_SIZE), false);
+			leftMotor.rotate(convertDistance(leftRadius, 2.97 * TILE_SIZE), true);
+			rightMotor.rotate(convertDistance(rightRadius, 2.97 * TILE_SIZE), false);
 
 			// set rotating speed 
 			leftMotor.setSpeed(ROTATE_SPEED);
@@ -61,6 +62,9 @@ public class SquareDriver {
 			leftMotor.rotate(convertAngle(leftRadius, track, 90.0), true);
 			rightMotor.rotate(-convertAngle(rightRadius, track, 90.0), false);
 		}
+	
+		Sound.setVolume(100);
+
 	}
 
 	/**
