@@ -35,6 +35,8 @@ public class OdometryCorrection implements Runnable {
 		this.csSensor = new EV3ColorSensor(csPort);
 		this.cs = csSensor.getMode("Red");
 		this.csData = new float[cs.sampleSize()];
+		
+		Sound.setVolume(100);
 
 	}
 
@@ -67,7 +69,7 @@ public class OdometryCorrection implements Runnable {
 
 			// TODO Trigger correction (When do I have information to correct?)
 			// TODO Calculate new (accurate) robot position
-			if (intensity <= 0.23) { // black line
+			if (intensity <= 0.26) { // black line
 				
 				// current X,Y,Theta
 				X = position[0];
@@ -82,7 +84,7 @@ public class OdometryCorrection implements Runnable {
 					// moving +Y
 					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
-					Y = Y - difference; // correction
+					Y = Y - difference - 8.25; // correction
 
 					countY++;	// black line
 					
@@ -94,7 +96,7 @@ public class OdometryCorrection implements Runnable {
 					countY--;
 					
 					difference = Y - (TILE * countY);
-					Y = Y - difference; // correction
+					Y = Y - difference + 10.25; // correction
 					
 					odometer.setY(Y);
 					
@@ -102,7 +104,7 @@ public class OdometryCorrection implements Runnable {
 					
 					// robot going in +X direction
 					difference = X - (TILE * countX);
-					X = X - difference - 2; // correction
+					X = X - difference - 1.75; // correction
 
 					countX++;
 					
@@ -114,7 +116,7 @@ public class OdometryCorrection implements Runnable {
 					countX--;
 					
 					difference = X - (TILE * countX);
-					X = X - difference + 2; // correction
+					X = X - difference + 1.75; // correction
 					
 					odometer.setX(X);
 					

@@ -48,8 +48,8 @@ public class SquareDriver {
 
 			// drive forward for 3 tiles
 			// both motors rotate together in same angle = move forward
-			leftMotor.rotate(convertDistance(leftRadius, 2.92 * TILE_SIZE), true);
-			rightMotor.rotate(convertDistance(rightRadius, 2.92 * TILE_SIZE), false);
+			leftMotor.rotate(convertDistance(leftRadius, 2.9 * TILE_SIZE), true);
+			rightMotor.rotate(convertDistance(rightRadius, 2.9 * TILE_SIZE), false);
 
 			// set rotating speed 
 			leftMotor.setSpeed(ROTATE_SPEED);
