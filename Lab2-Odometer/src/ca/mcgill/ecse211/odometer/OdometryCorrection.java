@@ -17,6 +17,9 @@ public class OdometryCorrection implements Runnable {
 	private SensorModes csSensor;
 	private SampleProvider cs;
 	private float[] csData;
+	private double X;
+	private double Y;
+	private double Theta;
 
 	/**
 	 * This is the default class constructor. An existing instance of the odometer
@@ -27,6 +30,11 @@ public class OdometryCorrection implements Runnable {
 	public OdometryCorrection() throws OdometerExceptions {
 
 		this.odometer = Odometer.getOdometer();
+		
+		// initialization
+		this.csSensor = new EV3ColorSensor(csPort);
+		this.cs = csSensor.getMode("Red");
+		this.csData = new float[cs.sampleSize()];
 
 	}
 
@@ -39,10 +47,6 @@ public class OdometryCorrection implements Runnable {
 	public void run() {
 		long correctionStart, correctionEnd;
 
-		this.csSensor = new EV3ColorSensor(csPort);
-		this.cs = csSensor.getMode("Red");
-		this.csData = new float[cs.sampleSize()];
-		
 		// counts black lines in the X and Y direction
 		int countX = 0;
 		int countY = 0;
@@ -59,18 +63,16 @@ public class OdometryCorrection implements Runnable {
 			// get current values for x, y, and theta
 			double position[] = odometer.getXYT();
 
-			// current X,Y,Theta
-			double X = position[0];
-			double Y = position[1];
-			double Theta = position[2];
-			double dX = 0.0;
-			double dY = 0.0;
-
 			double difference = 0.0;
 
 			// TODO Trigger correction (When do I have information to correct?)
 			// TODO Calculate new (accurate) robot position
 			if (intensity <= 0.23) { // black line
+				
+				// current X,Y,Theta
+				X = position[0];
+				Y = position[1];
+				Theta = position[2];
 				
 				Sound.beep();	// signal occurrence
 				
@@ -84,6 +86,8 @@ public class OdometryCorrection implements Runnable {
 
 					countY++;	// black line
 					
+					odometer.setY(Y);
+					
 				} else if(Theta > 170 && Theta < 190) {
 					
 					// robot is going in -Y direction
@@ -92,30 +96,33 @@ public class OdometryCorrection implements Runnable {
 					difference = Y - (TILE * countY);
 					Y = Y - difference; // correction
 					
+					odometer.setY(Y);
+					
 				} else if(Theta > 80 && Theta < 100) {
 					
 					// robot going in +X direction
+					difference = X - (TILE * countX);
+					X = X - difference - 2; // correction
+
 					countX++;
 					
-					difference = X - (TILE * countX);
-					X = X - difference; // correction
+					odometer.setX(X);
 					
-				} else {
+				} else if(Theta > 260 && Theta < 280) {
 					
 					// robot going in -X direction
 					countX--;
 					
 					difference = X - (TILE * countX);
-					X = X - difference; // correction
+					X = X - difference + 2; // correction
+					
+					odometer.setX(X);
 					
 				}
 				
+				// TODO Update odometer with new calculated (and more accurate) vales				
 				
 			}
-
-			// TODO Update odometer with new calculated (and more accurate) vales
-
-			odometer.setXYT(dX, dY, Theta);
 
 			// this ensure the odometry correction occurs only once every period
 			correctionEnd = System.currentTimeMillis();
