@@ -84,8 +84,8 @@ public class OdometryCorrection implements Runnable {
 					// moving +Y
 					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
-					Y = Y - difference; // correction
-
+					Y = Y - difference - 1.75; // correction
+					
 					countY++;	// black line
 					
 					odometer.setY(Y);
@@ -96,7 +96,7 @@ public class OdometryCorrection implements Runnable {
 					countY--;
 					
 					difference = Y - (TILE * countY);
-					Y = Y - difference + 3; // correction
+					Y = Y - difference + 1.75; // correction
 					
 					odometer.setY(Y);
 					
