@@ -101,7 +101,7 @@ public class Odometer extends OdometerData implements Runnable {
 
 		// the width of the robot from center of left wheel to center of right wheel
 		this.TRACK = TRACK;
-		
+
 		// the wheel radius
 		this.WHEEL_RAD = WHEEL_RAD;
 
@@ -111,42 +111,69 @@ public class Odometer extends OdometerData implements Runnable {
 	 * This method is meant to ensure only one instance of the odometer is used
 	 * throughout the code.
 	 * 
-	 * @param leftMotor
-	 * @param rightMotor
+	 * @param leftMotor  - existing left motor instance
+	 * @param rightMotor - existing right motor instance
 	 * @return new or existing Odometer Object
-	 * @throws OdometerExceptions
+	 * @throws OdometerExceptions - exception thrown if multiple odometer instances
+	 *                            are created
 	 */
 	public synchronized static Odometer getOdometer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
 			final double TRACK, final double WHEEL_RAD) throws OdometerExceptions {
-		if (odo != null) { // Return existing object
+
+		// checks if a Odometer object current exists
+		if (odo != null) {
+
+			// Return existing object
 			return odo;
-		} else { // create object and return it
+
+		} else {
+
+			// no OdometerData objects have been instantiated yet
+			// create new instance of Odometer
 			odo = new Odometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
+
+			// returns the new odometer instance
 			return odo;
+
 		}
 	}
 
 	/**
 	 * This class is meant to return the existing Odometer Object. It is meant to be
-	 * used only if an odometer object has been created
+	 * used only if an odometer object has been created.
 	 * 
-	 * @return error if no previous odometer exists
+	 * @throws OdometerExceptions - if no previous Odometer instance exists
+	 * @return an existing odometer instance
 	 */
 	public synchronized static Odometer getOdometer() throws OdometerExceptions {
 
+		// checks if a Odometer object current exists
 		if (odo == null) {
+
+			// if not instantiated, throw exception
 			throw new OdometerExceptions("No previous Odometer exits.");
 
 		}
+
+		// if there exist an Odometer instance, return
 		return odo;
+
 	}
 
 	/**
 	 * This method is where the logic for the odometer will run. Use the methods
-	 * provided from the OdometerData class to implement the odometer.
+	 * provided from the OdometerData class to implement the odometer. The odometer
+	 * records the current position of the robot by counting the difference in tacho
+	 * counts of the left and right tachometers.
+	 * 
+	 * <p>
+	 * The odometer uses the convention where the initial heading is the +Y
+	 * direction with Theta = 0. Theta increases if robot turns right. To the right
+	 * of the robot is the +X direction.
 	 */
-	// run method (required for Thread)
 	public void run() {
+
+		// variables to store the start and finish time
 		long updateStart, updateEnd;
 
 		while (true) {
@@ -190,6 +217,9 @@ public class Odometer extends OdometerData implements Runnable {
 
 			// this ensures that the odometer only runs once every period
 			updateEnd = System.currentTimeMillis();
+
+			// if program runs less than target time
+			// sleep thread for the missing time
 			if (updateEnd - updateStart < ODOMETER_PERIOD) {
 				try {
 					Thread.sleep(ODOMETER_PERIOD - (updateEnd - updateStart));

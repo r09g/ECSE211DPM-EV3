@@ -29,6 +29,10 @@ public class OdometryCorrection implements Runnable {
 	// this is the length of 1 tile in cm
 	private static final double TILE = 30.48;
 
+	// the intensity to standard intensity ratio threshold
+	// used for determining whether robot passed a black line
+	private static final double THRESHOLD = 0.75;
+
 	// -----------------------------------------------------------------------------
 	// Class Variables
 	// -----------------------------------------------------------------------------
@@ -54,7 +58,7 @@ public class OdometryCorrection implements Runnable {
 	// stores the initial reading taken at the start of trial
 	private double STD;
 
-	// stores the position data
+	// stores the position data X,Y,Theta
 	private double X;
 	private double Y;
 	private double Theta;
@@ -102,14 +106,18 @@ public class OdometryCorrection implements Runnable {
 	/**
 	 * The implementation for the odometry correction class. The odometer is
 	 * corrected when passing black lines on the demo board. A count is stored and
-	 * the odometer values are corrected based on the count. A filter is also
-	 * implemented in this method, initial readings are taken as the robot starts to
-	 * move, and are used as a standard to decide whether the robot passes a black
-	 * line.
+	 * the odometer values are corrected based on the count. An average filter is
+	 * also implemented in this method, initial readings are taken as the robot
+	 * starts to move, and are used as a standard to decide whether the robot passes
+	 * a black line.
+	 * 
+	 * <p>
+	 * The odometer uses the convention where the initial heading is the +Y
+	 * direction with Theta = 0. Theta increases if robot turns right. To the right
+	 * of the robot is the +X direction.
 	 * 
 	 * @throws OdometerExceptions
 	 */
-
 	public void run() {
 
 		// stores the start time and end time
@@ -137,7 +145,7 @@ public class OdometryCorrection implements Runnable {
 
 		// correction loop
 		while (true) {
-			
+
 			// records start time
 			correctionStart = System.currentTimeMillis();
 
@@ -146,74 +154,102 @@ public class OdometryCorrection implements Runnable {
 
 			// the actual correction applied to the X and Y values
 			double difference = 0.0;
-			
+
 			// activates filter and takes the average
 			double intensity = meanFilter();
 
-			if ((intensity / STD) < 0.75) { // black line
+			// if the ratio of the new intensity is less than threshold
+			// probably passed a black line
+			if ((intensity / STD) < THRESHOLD) {
 
-				// current X,Y,Theta
+				// current X,Y,Theta obtained from position, a double array
 				X = position[0];
 				Y = position[1];
 				Theta = position[2];
 
-				Sound.beep(); // signal occurrence
+				// signal when passed black line
+				Sound.beep();
 
 				// determine direction
 				if ((Theta > 350 && Theta < 360) || (Theta > 0 && Theta < 10)) {
 
-					// moving +Y
+					// robot is moving in the +Y direction
 					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
-					Y = Y - difference; // correction
 
-					countY++; // black line
+					// the new Y value after correction
+					Y = Y - difference;
 
+					// increment the number of black lines passed in the Y direction
+					countY++;
+
+					// update the Y value of the odometer
 					odometer.setY(Y);
 
 				} else if (Theta > 170 && Theta < 190) {
 
 					// robot is going in -Y direction
+					// decrement the number of black lines in the Y direction
 					countY--;
 
+					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
-					Y = Y - difference; // correction
 
+					// the new Y value after correction
+					Y = Y - difference;
+
+					// update the Y value of the odometer
 					odometer.setY(Y);
 
 				} else if (Theta > 80 && Theta < 100) {
 
 					// robot going in +X direction
+					// difference between theoretical distance and displayed distance
 					difference = X - (TILE * countX);
-					X = X - difference; // correction
 
+					// the new X value after correction
+					X = X - difference;
+
+					// increment the number of black lines passed in the X direction
 					countX++;
 
+					// update the X value of the odometer
 					odometer.setX(X);
 
 				} else if (Theta > 260 && Theta < 280) {
 
 					// robot going in -X direction
+					// decrement the number of black lines in the X direction
 					countX--;
 
+					// difference between theoretical distance and displayed distance
 					difference = X - (TILE * countX);
-					X = X - difference; // correction
 
+					// the new X value after correction
+					X = X - difference;
+
+					// update the X value of the odometer
 					odometer.setX(X);
 
 				}
 
 			}
 
-			// clear loop values
+			// clear and reset variable values for each loop
 			intensity = 0;
 			filterSum = 0;
 
-			// this ensure the odometry correction occurs only once every period
+			// record finish time
 			correctionEnd = System.currentTimeMillis();
+
+			// this ensure the odometry correction occurs only once every period
+			// if time elasped is too short, wait for some time
 			if (correctionEnd - correctionStart < CORRECTION_PERIOD) {
 				try {
+
+					// sleep for the time difference between required and actual time
 					Thread.sleep(CORRECTION_PERIOD - (correctionEnd - correctionStart));
+
 				} catch (InterruptedException e) {
 					// there is nothing to be done here
 				}
@@ -221,14 +257,30 @@ public class OdometryCorrection implements Runnable {
 		}
 	}
 
+	/**
+	 * This is a private method which functions as a mean or average filter. The
+	 * filter ensures the correctness of the readings, filtering out the noise in
+	 * the signal from the color sensor. The filter takes 5 readings and sums the
+	 * amplified value of each reading.
+	 * 
+	 * @return returns the average of the amplified reading
+	 */
 	private double meanFilter() {
-		// for the first 5 readings
+
+		// take 5 readings
 		for (int i = 0; i < 5; i++) {
+
+			// acquire sample data and read into array with no offset
 			cs.fetchSample(csData, 0);
-			filterSum += csData[0] * 100; // amplify signal
+
+			// amplify signal for increased sensitivity
+			filterSum += csData[0] * 100;
+
 		}
 
+		// return an amplified average
 		return filterSum / 5.0;
+
 	}
 
 }
