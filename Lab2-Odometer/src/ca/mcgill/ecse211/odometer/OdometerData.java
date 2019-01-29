@@ -147,7 +147,7 @@ public class OdometerData {
 	 * @param theta the value of theta
 	 */
 	public void setXYT(double x, double y, double theta) {
-		lock.lock();
+		lock.lock(); //acquire lock
 		isReseting = true;
 		try {
 			this.x = x;
@@ -167,7 +167,7 @@ public class OdometerData {
 	 * @param x the value of x
 	 */
 	public void setX(double x) {
-		lock.lock();
+		lock.lock(); //acquire lock
 		isReseting = true;
 		try {
 			this.x = x;
@@ -203,7 +203,7 @@ public class OdometerData {
 	 * @param theta the value of theta
 	 */
 	public void setTheta(double theta) {
-		lock.lock();
+		lock.lock(); //acquire lock
 		isReseting = true;
 		try {
 			this.theta = theta;

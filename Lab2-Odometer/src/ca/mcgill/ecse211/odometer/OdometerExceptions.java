@@ -9,7 +9,7 @@ package ca.mcgill.ecse211.odometer;
 public class OdometerExceptions extends Exception {
 
 	public OdometerExceptions(String Error) {
-		super(Error);
+		super(Error); //calls super constructor
 	}
 
 }
