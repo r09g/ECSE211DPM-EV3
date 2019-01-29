@@ -12,24 +12,58 @@ package ca.mcgill.ecse211.odometer;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
+/**
+ * This class describes the odometer function of the robot. The odometer records
+ * the position data based on the degrees rotated of the left motor and the
+ * right motor. The class contains constants that set the behaviour of the
+ * odometer, and also public methods that facilitate the pass of control to
+ * outside the class.
+ * 
+ * @author Raymond Yang
+ * @author Erica De Petrillo
+ */
+
 public class Odometer extends OdometerData implements Runnable {
 
-	private OdometerData odoData;
-	private static Odometer odo = null; // Returned as singleton
+	// -----------------------------------------------------------------------------
+	// Constants
+	// -----------------------------------------------------------------------------
 
-	// Motors and related variables
-	private int leftMotorTachoCount; // total degrees turned
+	// odometer update period in ms
+	private static final long ODOMETER_PERIOD = 25;
+
+	// degrees -> radians conversion
+	private static final double toRad = Math.PI / 180.0;
+	
+	// radians -> degrees conversion
+	private static final double toDeg = 180.0 / Math.PI;
+	
+	// -----------------------------------------------------------------------------
+	// Class Variables
+	// -----------------------------------------------------------------------------
+	
+	// provides access to odometer data
+	private OdometerData odoData;
+	
+	// Returned as singleton
+	private static Odometer odo = null;
+
+	// total degrees turned by left motor and right motor
+	private int leftMotorTachoCount;
 	private int rightMotorTachoCount;
+	
+	// the left motor and right motor objects
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
-	private double Theta; // heading in radians
+	
+	// heading of the robot in radians
+	private double Theta;
 
-	private final double TRACK; // distance between left and right wheels
-	private final double WHEEL_RAD; // wheel radius
-
-	private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
-	private static final double toRad = Math.PI / 180.0; // degrees -> radians conversion
-	private static final double toDeg = 180.0 / Math.PI; // radians -> degrees conversion
+	// distance between left and right wheels
+	private final double TRACK; 
+	
+	// wheel radius
+	private final double WHEEL_RAD;
 
 	/**
 	 * This is the default constructor of this class. It initiates all motors and
