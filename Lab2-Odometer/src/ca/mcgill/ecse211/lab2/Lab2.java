@@ -15,9 +15,6 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * threads are started based on the button clicked by the user. The robot drives
  * a square path after program starts. The program exits upon clicking any
  * button after starting the program and choosing a mode of operation.
- * 
- * @author Raymond Yang
- * @author Erica De Petrillo
  */
 
 public class Lab2 {
@@ -26,8 +23,14 @@ public class Lab2 {
 	// Constants
 	// -----------------------------------------------------------------------------
 
-	public static final double WHEEL_RAD = 2.1; // wheel radius of robot
-	public static final double TRACK = 13.4; // distance between center of left and right wheels
+	// wheel radius of robot
+	// this value reflects the actual value of the wheel radius
+	public static final double WHEEL_RAD = 2.1;
+
+	// distance between center of left and right wheels
+	// this value is tweaked to optimize the behaviours of the robot in different
+	// operation modes
+	public static final double TRACK = 13.4;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables
@@ -39,6 +42,10 @@ public class Lab2 {
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
 																														// motor
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
+
+	// -----------------------------------------------------------------------------
+	// Public Methods
+	// -----------------------------------------------------------------------------
 
 	/**
 	 * The main method for Lab2 class. In this class, the user options are specified
