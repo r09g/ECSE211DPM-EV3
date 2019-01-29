@@ -6,27 +6,59 @@ import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
+/**
+ * This class contains Lab2 Odometry Lab implemented on the EV3 platform. This
+ * class specifies constants that control the behaviour of the robot. This class
+ * also creates instances of the left and right motors, and also the LCD display
+ * and the information to be displayed. Users are given the option of choosing a
+ * mode of operation. The Odometer, OdometerDisplay, and odometryCorrection
+ * threads are started based on the button clicked by the user. The robot drives
+ * a square path after program starts. The program exits upon clicking any
+ * button after starting the program and choosing a mode of operation.
+ * 
+ * @author Raymond Yang
+ * @author Erica De Petrillo
+ */
+
 public class Lab2 {
 
+	// -----------------------------------------------------------------------------
+	// Constants
+	// -----------------------------------------------------------------------------
+
+	public static final double WHEEL_RAD = 2.1; // wheel radius of robot
+	public static final double TRACK = 13.4; // distance between center of left and right wheels
+
+	// -----------------------------------------------------------------------------
+	// Class Variables
+	// -----------------------------------------------------------------------------
+
 	// Motor Objects, and Robot related parameters
-	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
-
+	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); // left
+																														// motor
+	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
+																														// motor
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
-	public static final double WHEEL_RAD = 2.1; // wheel radius
-	public static final double TRACK = 13.4; // distance between left and right wheels
 
+	/**
+	 * The main method for Lab2 class. In this class, the user options are specified
+	 * and formatted. Responses to button clicks are specified. The instances of
+	 * odometer, odometryCorrection, and odometerDisplay are created. The odometer,
+	 * odometerDisplay, odometryCorrection, and SquareDrive threads are started.
+	 * 
+	 * @param args - command-line argument inputs, this will not be used here
+	 * @throws OdometerExceptions - this method may throw OdometerExceptions
+	 */
 	public static void main(String[] args) throws OdometerExceptions {
 
 		// records button clicked by user
 		int buttonChoice;
-			
-		// Odometer related objects
-		Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); // TODO Complete
-																							// implementation
-		OdometryCorrection odometryCorrection = new OdometryCorrection(); // TODO Complete
-																			// implementation
-		Display odometryDisplay = new Display(lcd); // No need to change
+
+		// Odometer instance and odometry correction instance initialization
+		Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
+		OdometryCorrection odometryCorrection = new OdometryCorrection();
+
+		Display odometryDisplay = new Display(lcd); // LCD display instance initialization
 
 		// ask user again if button clicked is not left or right
 		do {
@@ -43,21 +75,23 @@ public class Lab2 {
 			buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
 		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
 
+		// left button chosen
 		if (buttonChoice == Button.ID_LEFT) {
-			// Float the motors
+			// both motors are started and set to float mode
 			leftMotor.forward();
 			leftMotor.flt();
 			rightMotor.forward();
 			rightMotor.flt();
 
+			// starts threads relating to floating
 			// Display changes in position as wheels are (manually) moved
-
 			Thread odoThread = new Thread(odometer);
 			odoThread.start();
 			Thread odoDisplayThread = new Thread(odometryDisplay);
 			odoDisplayThread.start();
 
-		} else {
+		} else {// any other button chosen
+
 			// clear the display
 			lcd.clear();
 
@@ -71,13 +105,14 @@ public class Lab2 {
 			buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
 
 			// Start odometer and display threads
-			Thread odoThread = new Thread(odometer);
-			odoThread.start();
-			Thread odoDisplayThread = new Thread(odometryDisplay);
-			odoDisplayThread.start();
+			Thread odoThread = new Thread(odometer); // creates new odometer thread
+			odoThread.start(); // starts thread
+			Thread odoDisplayThread = new Thread(odometryDisplay); // new display thread for odometer
+			odoDisplayThread.start();// starts thread
 
 			// Start correction if right button was pressed
 			if (buttonChoice == Button.ID_RIGHT) {
+				// starts the odometer correction class
 				Thread odoCorrectionThread = new Thread(odometryCorrection);
 				odoCorrectionThread.start();
 			}
@@ -87,11 +122,12 @@ public class Lab2 {
 				public void run() {
 					SquareDriver.drive(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK);
 				}
-			}).start();
+			}).start(); // starts thread
 		}
 
+		// keep the program from ending
 		while (Button.waitForAnyPress() != Button.ID_ESCAPE)
 			;
-		System.exit(0);
+		System.exit(0); // exit program
 	}
 }
