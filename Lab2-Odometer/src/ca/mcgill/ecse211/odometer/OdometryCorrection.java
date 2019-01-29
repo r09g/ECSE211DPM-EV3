@@ -13,16 +13,15 @@ public class OdometryCorrection implements Runnable {
 	private Odometer odometer;
 
 	private static final double TILE = 30.48; // length of 1 tile in cm
-	private static final double FILTER = 0.32; // intensity filter standard
 
 	private static final Port csPort = LocalEV3.get().getPort("S1");
 	private SensorModes csSensor;
 	private SampleProvider cs;
 	private float[] csData;
-	
-	private LinkedList<Float> filter;
+
 	private double filterSum;
-	
+	private double STD;	// initial reading
+
 	private double X;
 	private double Y;
 	private double Theta;
@@ -41,8 +40,8 @@ public class OdometryCorrection implements Runnable {
 		this.csSensor = new EV3ColorSensor(csPort);
 		this.cs = csSensor.getMode("Red");
 		this.csData = new float[cs.sampleSize()];
-		this.filter = new LinkedList<Float>();
 		this.filterSum = 0;
+		this.STD = 0;
 
 		Sound.setVolume(50);
 
@@ -61,6 +60,13 @@ public class OdometryCorrection implements Runnable {
 		int countX = 0;
 		int countY = 0;
 
+		for(int i = 0; i < 100; i++) {
+			cs.fetchSample(csData, 0);
+			STD += csData[0] * 100;	// signal amplification
+		}
+		
+		STD /= 100.0;
+		
 		while (true) {
 			correctionStart = System.currentTimeMillis();
 
@@ -72,9 +78,9 @@ public class OdometryCorrection implements Runnable {
 			// TODO Trigger correction (When do I have information to correct?)
 			// TODO Calculate new (accurate) robot position
 			
-			double intensity = integralFilter();
+			double intensity = meanFilter();
 			
-			if (intensity <= 0.32 * 5000) { // black line
+			if ( (intensity / STD) < 0.75) { // black line
 
 				// current X,Y,Theta
 				X = position[0];
@@ -84,13 +90,13 @@ public class OdometryCorrection implements Runnable {
 				Sound.beep(); // signal occurrence
 
 				// determine direction
-				if (Theta > 350 && Theta < 10) {
+				if ((Theta > 350 && Theta < 360) || (Theta > 0 && Theta < 10)) {
 
 					// moving +Y
 					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
 					Y = Y - difference - 1.75; // correction
-
+					
 					countY++; // black line
 
 					odometer.setY(Y);
@@ -126,10 +132,12 @@ public class OdometryCorrection implements Runnable {
 					odometer.setX(X);
 
 				}
-
-				// TODO Update odometer with new calculated (and more accurate) vales
-
+				
 			}
+			
+			// clear loop values
+			intensity = 0;
+			filterSum = 0;
 
 			// this ensure the odometry correction occurs only once every period
 			correctionEnd = System.currentTimeMillis();
@@ -143,24 +151,14 @@ public class OdometryCorrection implements Runnable {
 		}
 	}
 
-	private double integralFilter() {
+	private double meanFilter() {
 		// for the first 5 readings
-		if (filter.size() < 5) {
-			cs.fetchSample(csData, 0); // obtain sensor reading
-			filter.addLast(csData[0]); // add to filter
-			filterSum += csData[0]; // add to filter sum
-			
-			return csData[0] * 5000;
-			
-		} else {
-			filterSum -= filter.removeFirst(); // decrement oldest value
-			cs.fetchSample(csData, 0); // obtain sensor reading
-			filter.addLast(csData[0]); // add new value to filter
-			filterSum += csData[0]; // add newest value to the end
-			
-			return filterSum * 1000; // amplify signal
-			
+		for(int i = 0; i < 5; i++) {
+			cs.fetchSample(csData, 0);
+			filterSum += csData[0] * 100;	// amplify signal
 		}
+		
+		return filterSum / 5.0;
 	}
 
 }

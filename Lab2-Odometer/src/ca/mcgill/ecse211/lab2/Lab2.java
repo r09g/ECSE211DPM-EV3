@@ -14,7 +14,7 @@ public class Lab2 {
 
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
 	public static final double WHEEL_RAD = 2.1; // wheel radius
-	public static final double TRACK = 12.95; // distance between left and right wheels
+	public static final double TRACK = 13.00; // distance between left and right wheels
 
 	public static void main(String[] args) throws OdometerExceptions {
 
