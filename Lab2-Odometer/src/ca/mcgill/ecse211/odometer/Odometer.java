@@ -34,60 +34,75 @@ public class Odometer extends OdometerData implements Runnable {
 
 	// degrees -> radians conversion
 	private static final double toRad = Math.PI / 180.0;
-	
+
 	// radians -> degrees conversion
 	private static final double toDeg = 180.0 / Math.PI;
-	
+
 	// -----------------------------------------------------------------------------
 	// Class Variables
 	// -----------------------------------------------------------------------------
-	
+
 	// provides access to odometer data
 	private OdometerData odoData;
-	
+
 	// Returned as singleton
 	private static Odometer odo = null;
 
 	// total degrees turned by left motor and right motor
 	private int leftMotorTachoCount;
 	private int rightMotorTachoCount;
-	
+
 	// the left motor and right motor objects
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
-	
+
 	// heading of the robot in radians
 	private double Theta;
 
 	// distance between left and right wheels
-	private final double TRACK; 
-	
+	private final double TRACK;
+
 	// wheel radius
 	private final double WHEEL_RAD;
 
+	// -----------------------------------------------------------------------------
+	// Constructor
+	// -----------------------------------------------------------------------------
+
 	/**
 	 * This is the default constructor of this class. It initiates all motors and
-	 * variables once.It cannot be accessed externally.
+	 * variables once. It cannot be accessed externally. The position is set to
+	 * (0,0,0) at start.
 	 * 
-	 * @param leftMotor
-	 * @param rightMotor
-	 * @throws OdometerExceptions
+	 * @param leftMotor  - the left motor object to be initialized
+	 * @param rightMotor - the right motor object to be initialized
+	 * @throws OdometerExceptions - throws the OdometerExceptions if fails to
+	 *                            retrieve control for odometer object
 	 */
 	private Odometer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, final double TRACK,
 			final double WHEEL_RAD) throws OdometerExceptions {
-		odoData = OdometerData.getOdometerData(); // Allows access to x,y,z
-													// manipulation methods
+
+		// retrieves odometerData control, allows control of x,y,and theta values
+		odoData = OdometerData.getOdometerData();
+
+		// initializes the left and right motors
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
 
-		// Reset the values of x, y and z to 0
+		// Reset the values of x, y and theta to 0
 		odoData.setXYT(0, 0, 0);
 
+		// resets the left motor and right motor tacho counts to 0
 		this.leftMotorTachoCount = 0;
 		this.rightMotorTachoCount = 0;
+
+		// resets heading to 0
 		this.Theta = 0.0;
 
+		// the width of the robot from center of left wheel to center of right wheel
 		this.TRACK = TRACK;
+		
+		// the wheel radius
 		this.WHEEL_RAD = WHEEL_RAD;
 
 	}

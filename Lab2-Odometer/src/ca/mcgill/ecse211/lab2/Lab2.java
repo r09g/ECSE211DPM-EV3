@@ -30,7 +30,7 @@ public class Lab2 {
 	// distance between center of left and right wheels
 	// this value is tweaked to optimize the behaviours of the robot in different
 	// operation modes
-	public static final double TRACK = 13.175;
+	public static final double TRACK = 13.21;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables

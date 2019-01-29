@@ -107,7 +107,7 @@ public class OdometryCorrection implements Runnable {
 					countY--;
 
 					difference = Y - (TILE * countY);
-					Y = Y - difference + 3.2; // correction
+					Y = Y - difference; // correction
 
 					odometer.setY(Y);
 
@@ -127,7 +127,7 @@ public class OdometryCorrection implements Runnable {
 					countX--;
 
 					difference = X - (TILE * countX);
-					X = X - difference + 1.5; // correction
+					X = X - difference; // correction
 					
 					odometer.setX(X);
 					
