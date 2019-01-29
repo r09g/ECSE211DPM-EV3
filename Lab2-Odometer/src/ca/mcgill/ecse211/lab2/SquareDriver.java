@@ -4,6 +4,8 @@
 package ca.mcgill.ecse211.lab2;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.Sound;
 
 /**
@@ -61,6 +63,7 @@ public class SquareDriver {
 			// turn 90 degrees clockwise
 			leftMotor.rotate(convertAngle(leftRadius, track, 90.0), true);
 			rightMotor.rotate(-convertAngle(rightRadius, track, 90.0), false);
+			
 		}
 	
 		Sound.setVolume(100);

@@ -95,7 +95,7 @@ public class OdometryCorrection implements Runnable {
 					// moving +Y
 					// difference between theoretical distance and displayed distance
 					difference = Y - (TILE * countY);
-					Y = Y - difference - 1.75; // correction
+					Y = Y - difference; // correction
 					
 					countY++; // black line
 
@@ -107,7 +107,7 @@ public class OdometryCorrection implements Runnable {
 					countY--;
 
 					difference = Y - (TILE * countY);
-					Y = Y - difference + 1.75; // correction
+					Y = Y - difference + 3.2; // correction
 
 					odometer.setY(Y);
 
@@ -115,7 +115,7 @@ public class OdometryCorrection implements Runnable {
 
 					// robot going in +X direction
 					difference = X - (TILE * countX);
-					X = X - difference - 1.75; // correction
+					X = X - difference; // correction
 
 					countX++;
 
@@ -127,10 +127,10 @@ public class OdometryCorrection implements Runnable {
 					countX--;
 
 					difference = X - (TILE * countX);
-					X = X - difference + 1.75; // correction
-
+					X = X - difference + 1.5; // correction
+					
 					odometer.setX(X);
-
+					
 				}
 				
 			}
