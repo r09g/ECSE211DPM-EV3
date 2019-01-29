@@ -11,7 +11,6 @@
 package ca.mcgill.ecse211.odometer;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import java.math.*;
 
 public class Odometer extends OdometerData implements Runnable {
 

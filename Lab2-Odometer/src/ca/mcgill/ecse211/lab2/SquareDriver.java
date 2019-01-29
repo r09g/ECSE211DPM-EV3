@@ -10,7 +10,7 @@ import lejos.hardware.Sound;
  * This class is used to drive the robot on the demo floor.
  */
 public class SquareDriver {
-	private static final int FORWARD_SPEED = 250;
+	private static final int FORWARD_SPEED = 225;
 	private static final int ROTATE_SPEED = 150;
 	private static final double TILE_SIZE = 30.48;
 
