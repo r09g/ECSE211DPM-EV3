@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.lab3;
 
+import ca.mcgill.ecse211.lab3.SquareDriver;
 import ca.mcgill.ecse211.odometer.*;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
@@ -118,15 +119,16 @@ public class Lab3 {
 			odoDisplayThread.start();// starts thread
 
 			// Start correction if right button was pressed
-			if (buttonChoice == Button.ID_RIGHT) {
+		/*	if (buttonChoice == Button.ID_RIGHT) {
 				// starts the odometer correction class
 				Thread odoCorrectionThread = new Thread(odometryCorrection);
 				odoCorrectionThread.start();
-			}
+			}*/
 
 			// spawn a new Thread to avoid SquareDriver.drive() from blocking
 			(new Thread() {
 				public void run() {
+					//Navigation.travelTo(30.48*2, 30.48*2);
 					SquareDriver.drive(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK);
 				}
 			}).start(); // starts thread

@@ -37,7 +37,7 @@ public class OdometryCorrection implements Runnable {
 	private Odometer odometer;
 
 	// specifies the port of the color sensor
-	private static final Port csPort = LocalEV3.get().getPort("S1");
+	//private static final Port csPort = LocalEV3.get().getPort("S1");
 
 	// provides options to choose mode of sensor
 	private SensorModes csSensor;
@@ -78,7 +78,7 @@ public class OdometryCorrection implements Runnable {
 		this.odometer = Odometer.getOdometer();
 
 		// initialization of the color sensor
-		this.csSensor = new EV3ColorSensor(csPort);
+	/*	this.csSensor = new EV3ColorSensor(csPort);
 
 		// specifies the mode of operation of the sensor
 		this.cs = csSensor.getMode("Red");
@@ -88,7 +88,7 @@ public class OdometryCorrection implements Runnable {
 
 		// initializes the variables used in the mean filter
 		this.filterSum = 0;
-		this.STD = 0;
+		this.STD = 0;*/
 
 		// set the beeping volume of the robot
 		Sound.setVolume(50);

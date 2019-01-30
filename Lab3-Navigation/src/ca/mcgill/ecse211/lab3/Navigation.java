@@ -17,14 +17,14 @@ public class Navigation {
 		// radians -> degrees conversion
 		private static final double toDeg = 180.0 / Math.PI;
 		
-		private static final int FWDSPEED = 200; //forward speed, might need to change later
-		private static final int TRNSPEED = 100; // turn speed, migth need to change later
+		private static final int FWDSPEED = 250; //forward speed, might need to change later
+		private static final int TRNSPEED = 150; // turn speed, migth need to change later
 		
-		private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); // left
+		private static EV3LargeRegulatedMotor leftMotor; // left
 		// motor
-private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
+private static  EV3LargeRegulatedMotor rightMotor; // right
 		// motor
-		double position[] = null;
+		static double position[] = null;
 		
 		// wheel radius of robot
 		// this value reflects the actual value of the wheel radius
@@ -36,8 +36,11 @@ private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMo
 		public static final double TRACK = 13.21;
 
 		
-	public Navigation() {
+	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
 		//constructor
+		Navigation.leftMotor = leftMotor;
+		Navigation.rightMotor = rightMotor;
+		
 		try {
 			position = Odometer.getOdometer().getXYT();
 		} catch (OdometerExceptions e) {
@@ -46,7 +49,7 @@ private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMo
 		}
 	}
 
-	void travelTo(double x, double y) {
+	public static void travelTo(double x, double y) {
 		/*this method causes the robot to travel to the absolute field
 		location (x, y) specified in the tile points. This method should continuously
 		call turnTO(double theta) and then set the motor speed to forward(straight).
@@ -78,11 +81,18 @@ private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMo
 		else if (dTheta < 0 && dx < 0) { //2nd quadrant
 			dTheta = 270 + dTheta; //absolute angle
 		}
-		turnTo(dTheta);
+		
+		turnTo(dTheta); //robot turns
+		
+		leftMotor.setSpeed(FWDSPEED);
+		rightMotor.setSpeed(FWDSPEED); //sets to forward speed
+		
+		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); //from square driver, goes straight
+		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), false);
 		
 	}
 	
-	void turnTo(double Theta) {
+	private static void turnTo(double Theta) {
 		//causes the robot to turn on point to absolute heading theta
 		//should turn at minimal angle to target
 		leftMotor.setSpeed(TRNSPEED);
@@ -107,7 +117,7 @@ private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMo
 		
 	}
 	
-	boolean isNavigating() {
+	public boolean isNavigating() {
 		//returns true if another thread has called travelTo() or turnTo() and the method has yet to return
 		//false otherwise
 		return false;
