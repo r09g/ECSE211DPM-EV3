@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.lab3;
 
-import ca.mcgill.ecse211.lab3.SquareDriver;
 import ca.mcgill.ecse211.odometer.*;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
@@ -64,8 +63,6 @@ public class Lab3 {
 
 		// Odometer instance and odometry correction instance initialization
 		final Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
-		OdometryCorrection odometryCorrection = new OdometryCorrection();
-
 		Display odometryDisplay = new Display(lcd); // LCD display instance initialization
 
 		// ask user again if button clicked is not left or right
@@ -73,44 +70,40 @@ public class Lab3 {
 			// clear the display
 			lcd.clear();
 
-			// ask the user whether the motors should drive in a square or float
 			lcd.drawString("< Left | Right >", 0, 0);
 			lcd.drawString("       |        ", 0, 1);
-			lcd.drawString(" Float | Drive  ", 0, 2);
-			lcd.drawString("motors | in a   ", 0, 3);
-			lcd.drawString("       | square ", 0, 4);
+			lcd.drawString("Simple | Nav w/ ", 0, 2);
+			lcd.drawString("  Nav  |   obs  ", 0, 3);
+			lcd.drawString("       |  avoid ", 0, 4);
 
 			buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
 		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
 
 		// left button chosen
 		if (buttonChoice == Button.ID_LEFT) {
-			// both motors are started and set to float mode
-			leftMotor.forward();
-			leftMotor.flt();
-			rightMotor.forward();
-			rightMotor.flt();
 
-			// starts threads relating to floating
-			// Display changes in position as wheels are (manually) moved
+			// simple navigation
 			Thread odoThread = new Thread(odometer);
 			odoThread.start();
 			Thread odoDisplayThread = new Thread(odometryDisplay);
 			odoDisplayThread.start();
 
-		} else {// any other button chosen
+			// navigation thread
+			(new Thread() {
+				public void run() {
 
-			// clear the display
-			lcd.clear();
+					Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
+//					Navigation.travelTo(30.48*2, 30.48*2);
+//					Navigation.travelTo(30.48, 30.48*2);
+//					Navigation.travelTo(0, 30.48);
+//					Navigation.travelTo(30.48*2, 30.48);
+//					Navigation.travelTo(0, 0);
+					Navigation.travelTo(-30.48 * 2, 30.48 * 2);
 
-			// ask the user whether odometery correction should be run or not
-			lcd.drawString("< Left | Right >", 0, 0);
-			lcd.drawString("  No   | with   ", 0, 1);
-			lcd.drawString(" corr- | corr-  ", 0, 2);
-			lcd.drawString(" ection| ection ", 0, 3);
-			lcd.drawString("       |        ", 0, 4);
+				}
+			}).start(); // starts thread
 
-			buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
+		} else { // navigation with obstacle avoidance
 
 			// Start odometer and display threads
 			Thread odoThread = new Thread(odometer); // creates new odometer thread
@@ -118,26 +111,6 @@ public class Lab3 {
 			Thread odoDisplayThread = new Thread(odometryDisplay); // new display thread for odometer
 			odoDisplayThread.start();// starts thread
 
-			// Start correction if right button was pressed
-		/*	if (buttonChoice == Button.ID_RIGHT) {
-				// starts the odometer correction class
-				Thread odoCorrectionThread = new Thread(odometryCorrection);
-				odoCorrectionThread.start();
-			}*/
-
-			// spawn a new Thread to avoid SquareDriver.drive() from blocking
-			(new Thread() {
-				public void run() {
-					Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
-					//Navigation.travelTo(30.48*2, 30.48*2);
-				//	Navigation.travelTo(30.48, 30.48*2);
-					//Navigation.travelTo(0, 30.48);
-				//	Navigation.travelTo(30.48*2, 30.48);
-					//Navigation.travelTo(0, 0);
-					Navigation.travelTo(-30.48*2, 30.48*2);
-					//SquareDriver.drive(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK);
-				}
-			}).start(); // starts thread
 		}
 
 		// keep the program from ending
