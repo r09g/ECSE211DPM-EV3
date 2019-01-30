@@ -5,6 +5,7 @@ import ca.mcgill.ecse211.odometer.OdometerExceptions;
 
 import java.math.*;
 
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import ca.mcgill.ecse211.lab3.SquareDriver;
@@ -34,19 +35,15 @@ private static  EV3LargeRegulatedMotor rightMotor; // right
 		// this value is tweaked to optimize the behaviours of the robot in different
 		// operation modes
 		public static final double TRACK = 13.21;
-
 		
-	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
+		public static Odometer odo;
+		
+	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
 		//constructor
 		Navigation.leftMotor = leftMotor;
 		Navigation.rightMotor = rightMotor;
+		odo = odometer;		
 		
-		try {
-			position = Odometer.getOdometer().getXYT();
-		} catch (OdometerExceptions e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public static void travelTo(double x, double y) {
@@ -55,13 +52,7 @@ private static  EV3LargeRegulatedMotor rightMotor; // right
 		call turnTO(double theta) and then set the motor speed to forward(straight).
 		this will make sure ur heading is updated until u reach ur exact goal. this method will
 		poll odometer for info*/
-		double position[] = null;
-		try {
-			position = Odometer.getOdometer().getXYT();
-		} catch (OdometerExceptions e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		position = odo.getXYT();
 		//current position
 		//position[0] = x, position[1] = y, position[2] = theta
 		double dx = x - position[0]; //displacement in x
@@ -73,13 +64,13 @@ private static  EV3LargeRegulatedMotor rightMotor; // right
 			dTheta = 90-dTheta; //our convention being north = 0degrees + increase clockwise, this new angle is the absolute angle
 		}
 		else if (dTheta >=0 && dx < 0) { //3rd quadrant
-			dTheta = 270 - dTheta; //absolute angle
+			dTheta = 270 + dTheta; //absolute angle
 		}
 		else if (dTheta < 0 && dx >= 0) { //4th quadrant
 			dTheta = 90 + dTheta; //absolute angle
 		}
 		else if (dTheta < 0 && dx < 0) { //2nd quadrant
-			dTheta = 270 + dTheta; //absolute angle
+			dTheta = 270 - dTheta; //absolute angle
 		}
 		
 		turnTo(dTheta); //robot turns
@@ -97,29 +88,28 @@ private static  EV3LargeRegulatedMotor rightMotor; // right
 		//should turn at minimal angle to target
 		leftMotor.setSpeed(TRNSPEED);
 		rightMotor.setSpeed(TRNSPEED);
-		
+			
 		double minTheta = ((Theta - position[2]) + 360)%360; //right turn angle
+	
 		
 		if (minTheta > 0 && minTheta <=180) { //already min angle, turn right
 			leftMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
 			rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false); //from square driver
 		}
-		else if (minTheta > 0 && minTheta > 180) { //will not be minimal angle by turning right
+		else if (minTheta > 180 && minTheta < 360) { //will not be minimal angle by turning right
 			//turn left
-			minTheta = minTheta - 180; //since we are turning in the opposite direction
-		leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
-		rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true); //opposite from square driver since we turn left
 			
-		}
-		
-	//	leftMotor.rotate(SquareDriver.convertAngle(leftRadius, track, 90.0), true);
-	//	rightMotor.rotate(-SquareDriver.convertAngle(rightRadius, track, 90.0), false);
-		
+			minTheta = 360 - minTheta; //since we are turning in the opposite direction
+			rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
+			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+			//opposite from square driver since we turn left			
+		}		
 	}
 	
 	public boolean isNavigating() {
 		//returns true if another thread has called travelTo() or turnTo() and the method has yet to return
 		//false otherwise
+		//TODO:
 		return false;
 	}
 	

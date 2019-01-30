@@ -63,7 +63,7 @@ public class Lab3 {
 		int buttonChoice;
 
 		// Odometer instance and odometry correction instance initialization
-		Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
+		final Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
 		OdometryCorrection odometryCorrection = new OdometryCorrection();
 
 		Display odometryDisplay = new Display(lcd); // LCD display instance initialization
@@ -128,8 +128,14 @@ public class Lab3 {
 			// spawn a new Thread to avoid SquareDriver.drive() from blocking
 			(new Thread() {
 				public void run() {
+					Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
 					//Navigation.travelTo(30.48*2, 30.48*2);
-					SquareDriver.drive(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK);
+				//	Navigation.travelTo(30.48, 30.48*2);
+					//Navigation.travelTo(0, 30.48);
+				//	Navigation.travelTo(30.48*2, 30.48);
+					//Navigation.travelTo(0, 0);
+					Navigation.travelTo(-30.48*2, 30.48*2);
+					//SquareDriver.drive(leftMotor, rightMotor, WHEEL_RAD, WHEEL_RAD, TRACK);
 				}
 			}).start(); // starts thread
 		}
