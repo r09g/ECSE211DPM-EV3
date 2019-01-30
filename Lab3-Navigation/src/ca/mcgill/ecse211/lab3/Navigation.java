@@ -24,9 +24,26 @@ public class Navigation {
 		// motor
 private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
 		// motor
+		double position[] = null;
+		
+		// wheel radius of robot
+		// this value reflects the actual value of the wheel radius
+		public static final double WHEEL_RAD = 2.1;
+
+		// distance between center of left and right wheels
+		// this value is tweaked to optimize the behaviours of the robot in different
+		// operation modes
+		public static final double TRACK = 13.21;
+
 		
 	public Navigation() {
 		//constructor
+		try {
+			position = Odometer.getOdometer().getXYT();
+		} catch (OdometerExceptions e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	void travelTo(double x, double y) {
@@ -71,8 +88,22 @@ private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMo
 		leftMotor.setSpeed(TRNSPEED);
 		rightMotor.setSpeed(TRNSPEED);
 		
-		leftMotor.rotate(SquareDriver.convertAngle(leftRadius, track, 90.0), true);
-		rightMotor.rotate(-SquareDriver.convertAngle(rightRadius, track, 90.0), false);
+		double minTheta = ((Theta - position[2]) + 360)%360; //right turn angle
+		
+		if (minTheta > 0 && minTheta <=180) { //already min angle, turn right
+			leftMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
+			rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false); //from square driver
+		}
+		else if (minTheta > 0 && minTheta > 180) { //will not be minimal angle by turning right
+			//turn left
+			minTheta = minTheta - 180; //since we are turning in the opposite direction
+		leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+		rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true); //opposite from square driver since we turn left
+			
+		}
+		
+	//	leftMotor.rotate(SquareDriver.convertAngle(leftRadius, track, 90.0), true);
+	//	rightMotor.rotate(-SquareDriver.convertAngle(rightRadius, track, 90.0), false);
 		
 	}
 	
@@ -80,5 +111,38 @@ private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMo
 		//returns true if another thread has called travelTo() or turnTo() and the method has yet to return
 		//false otherwise
 		return false;
+	}
+	
+	/**
+	 * This is a static method allows the conversion of a distance to the total
+	 * rotation of each wheel need to cover that distance.
+	 * 
+	 * (Distance / Wheel Circumference) = Number of wheel rotations. Number of
+	 * rotations * 360.0 degrees = Total number of degrees needed to turn.
+	 * 
+	 * @param radius   - Radius of the wheel
+	 * @param distance - Distance of path
+	 * @return an integer indicating the total rotation angle for wheel to cover the
+	 *         distance
+	 */
+	private static int convertDistance(double radius, double distance) {
+		return (int) ((180.0 * distance) / (Math.PI * radius));
+	}
+	
+	/**
+	 * This is a static method that converts the angle needed to turn at a corner to
+	 * the equivalent total rotation. This method first converts the degrees of
+	 * rotation, radius of wheels, and width of robot to distance needed to cover by
+	 * the wheel, then the method calls another static method in process to convert
+	 * distance to the number of degrees of rotation.
+	 * 
+	 * @param radius - the radius of the wheels
+	 * @param width  - the track of the robot
+	 * @param angle  - the angle for the turn
+	 * @return an int indicating the total rotation sufficient for wheel to cover
+	 *         turn angle
+	 */
+	private static int convertAngle(double radius, double width, double angle) {
+		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
 }
