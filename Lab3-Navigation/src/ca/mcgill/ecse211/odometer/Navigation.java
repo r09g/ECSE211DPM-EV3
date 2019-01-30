@@ -20,7 +20,13 @@ public class Navigation {
 		call turnTO(double theta) and then set the motor speed to forward(straight).
 		this will make sure ur heading is updated until u reach ur exact goal. this method will
 		poll odometer for info*/
-		double position[] = Odometer.getOdometer().getXYT(); //current position
+		double position[] = null;
+		try {
+			position = Odometer.getOdometer().getXYT();
+		} catch (OdometerExceptions e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} //current position
 		//position[0] = x, position[1] = y, position[2] = theta
 		double dx = x - position[0]; //displacement in x
 		double dy = y - position[1]; // displacment in y
@@ -31,8 +37,9 @@ public class Navigation {
 		//calculate angle of turn
 		// determine direction
 		if ((position[2] > 350 && position[2] < 360) || (position[2] > 0 && position[2] < 10)) { // moving +Y
+			dTheta = Math.atan(dx/dy) * toDeg;
 			if (dx >= 0) { //new destination on right of robot
-				dTheta = Math.atan(dx/dy) * toDeg;
+				
 				if (dTheta >= 0) {
 					//TODO turn right
 				}
@@ -52,8 +59,8 @@ public class Navigation {
 			}
 
 		} else if (position[2] > 170 && position[2] < 190) { //robot is going in -Y direction
+			dTheta = Math.atan(dx/dy) * toDeg;
 			if (dx >= 0) { //new destination on right of robot
-				dTheta = Math.atan(dx/dy) * toDeg;
 				if (dTheta >= 0) {
 					//TODO turn left
 				}
@@ -73,8 +80,9 @@ public class Navigation {
 			}
 
 		} else if (position[2] > 80 && position[2] < 100) {	// robot going in +X direction
+			dTheta = Math.atan(dy/dx) * toDeg;
 			if (dy >= 0) { //new destination on right of robot
-				dTheta = Math.atan(dy/dx) * toDeg;
+				
 				if (dTheta >= 0) {
 					//TODO turn right
 				}
