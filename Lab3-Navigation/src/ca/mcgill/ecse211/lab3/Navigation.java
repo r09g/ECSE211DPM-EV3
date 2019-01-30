@@ -60,24 +60,29 @@ public class Navigation {
 
 		isNavigating = true; // update status
 
-		position = odo.getXYT();
-		// current position
+		position = odo.getXYT(); // current position
+
 		// position[0] = x, position[1] = y, position[2] = theta
 		double dx = x - position[0]; // displacement in x
 		double dy = y - position[1]; // displacment in y
 		double ds = Math.hypot(dx, dy); // calculates the hypotenuse of dx and dy --> gives the displacement robot will
 										// need to travel to get to destination
 		double dTheta = Math.atan(dy / dx) * toDeg; // calculates angle dTheta of new displacement
-		// will be in the range of [-90,90] degrees
-		if (dTheta >= 0 && dx >= 0) { // first quadrant
-			dTheta = 90 - dTheta; // our convention being north = 0 degrees + increase clockwise, this new angle
-									// is the absolute angle
-		} else if (dTheta >= 0 && dx < 0) { // 3rd quadrant
-			dTheta = 270 + dTheta; // absolute angle
-		} else if (dTheta < 0 && dx >= 0) { // 4th quadrant
-			dTheta = 90 + dTheta; // absolute angle
-		} else if (dTheta < 0 && dx < 0) { // 2nd quadrant
-			dTheta = 270 - dTheta; // absolute angle
+													// will be in the range of [-90,90] degrees
+		
+		// our convention being north = 0 degrees + increase clockwise, this new angle is the absolute angle
+		if (dTheta >= 0 && dx >= 0) { 
+			// first quadrant
+			dTheta = 90 - dTheta;	// absolute angle
+		} else if (dTheta >= 0 && dx < 0) { 
+			// 3rd quadrant
+			dTheta = 270 - dTheta; 	// absolute angle
+		} else if (dTheta < 0 && dx >= 0) { 
+			// 4th quadrant
+			dTheta = 90 - dTheta; 	// absolute angle
+		} else if (dTheta < 0 && dx < 0) { 
+			// 2nd quadrant
+			dTheta = 270 - dTheta;	// absolute angle
 		}
 
 		turnTo(dTheta); // robot turns

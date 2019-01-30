@@ -70,14 +70,14 @@ public class Lab3 {
 			// clear the display
 			lcd.clear();
 
-			lcd.drawString("< Left | Right >", 0, 0);
-			lcd.drawString("       |        ", 0, 1);
-			lcd.drawString("Simple | Nav w/ ", 0, 2);
-			lcd.drawString("  Nav  |   obs  ", 0, 3);
-			lcd.drawString("       |  avoid ", 0, 4);
+			lcd.drawString("< Left  |  Right >", 0, 0);
+			lcd.drawString("        |         ", 0, 1);
+			lcd.drawString("Simple  |  Nav w/ ", 0, 2);
+			lcd.drawString("  Nav   |    obs  ", 0, 3);
+			lcd.drawString("        |   avoid ", 0, 4);
 
 			buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
-		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
+		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT && buttonChoice != Button.ID_ESCAPE);
 
 		// left button chosen
 		if (buttonChoice == Button.ID_LEFT) {
@@ -98,12 +98,12 @@ public class Lab3 {
 //					Navigation.travelTo(0, 30.48);
 //					Navigation.travelTo(30.48*2, 30.48);
 //					Navigation.travelTo(0, 0);
-					Navigation.travelTo(-30.48 * 2, 30.48 * 2);
+					Navigation.travelTo(-30.48 * 2, -30.48 * 2);
 
 				}
 			}).start(); // starts thread
 
-		} else { // navigation with obstacle avoidance
+		} else if(buttonChoice == Button.ID_RIGHT) { // navigation with obstacle avoidance
 
 			// Start odometer and display threads
 			Thread odoThread = new Thread(odometer); // creates new odometer thread
@@ -111,11 +111,12 @@ public class Lab3 {
 			Thread odoDisplayThread = new Thread(odometryDisplay); // new display thread for odometer
 			odoDisplayThread.start();// starts thread
 
+		} else {
+			System.exit(0); // exit
 		}
 
 		// keep the program from ending
-		while (Button.waitForAnyPress() != Button.ID_ESCAPE)
-			;
+		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
 		System.exit(0); // exit program
 	}
 }
