@@ -25,12 +25,15 @@ public class Lab3 {
 
 	// wheel radius of robot
 	// this value reflects the actual value of the wheel radius
-	public static final double WHEEL_RAD = 2.1;
+	private static final double WHEEL_RAD = 2.1;
 
 	// distance between center of left and right wheels
 	// this value is tweaked to optimize the behaviours of the robot in different
 	// operation modes
-	public static final double TRACK = 13.21;
+	private static final double TRACK = 13.21;
+
+	// length of tile in cm
+	private static final double TILE = 30.48;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables
@@ -91,19 +94,14 @@ public class Lab3 {
 			// navigation thread
 			(new Thread() {
 				public void run() {
-
 					Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
-//					Navigation.travelTo(30.48*2, 30.48*2);
-//					Navigation.travelTo(30.48, 30.48*2);
-//					Navigation.travelTo(0, 30.48);
-//					Navigation.travelTo(30.48*2, 30.48);
-//					Navigation.travelTo(0, 0);
-					Navigation.travelTo(-30.48 * 2, -30.48 * 2);
 
+					// choose travelling sequence
+					SNpath(1);
 				}
 			}).start(); // starts thread
 
-		} else if(buttonChoice == Button.ID_RIGHT) { // navigation with obstacle avoidance
+		} else if (buttonChoice == Button.ID_RIGHT) { // navigation with obstacle avoidance
 
 			// Start odometer and display threads
 			Thread odoThread = new Thread(odometer); // creates new odometer thread
@@ -112,11 +110,85 @@ public class Lab3 {
 			odoDisplayThread.start();// starts thread
 
 		} else {
-			System.exit(0); // exit
+			// exits upon pressing esc button
+			System.exit(0);
 		}
 
 		// keep the program from ending
-		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+		while (Button.waitForAnyPress() != Button.ID_ESCAPE)
+			;
 		System.exit(0); // exit program
 	}
+
+	private static void SNpath(int num) {
+		switch (num) {
+		case 1:
+			Navigation.travelTo(0,2);
+			Navigation.travelTo(1,1);
+			Navigation.travelTo(2,2);
+			Navigation.travelTo(2,1);
+			Navigation.travelTo(1,0);
+			break;
+		case 2:
+			Navigation.travelTo(1,1);
+			Navigation.travelTo(0,2);
+			Navigation.travelTo(2,2);
+			Navigation.travelTo(2,1);
+			Navigation.travelTo(1,0);
+			break;
+		case 3:
+			Navigation.travelTo(1,0);
+			Navigation.travelTo(2,1);
+			Navigation.travelTo(2,2);
+			Navigation.travelTo(0,2);
+			Navigation.travelTo(1,1);
+			break;
+		case 4:
+			Navigation.travelTo(0,1);
+			Navigation.travelTo(2,1);
+			Navigation.travelTo(1,0);
+			Navigation.travelTo(2,1);
+			Navigation.travelTo(2,2);
+			break;
+		default:
+			break;			
+		}
+	}
+
+	private static void USNavpath(int num) {
+		switch (num) {
+		case 1:
+			USNav.travelTo(0, 2);
+			USNav.travelTo(1, 1);
+			USNav.travelTo(2, 2);
+			USNav.travelTo(2, 1);
+			USNav.travelTo(1, 0);
+			break;
+		case 2:
+			USNav.travelTo(1, 1);
+			USNav.travelTo(0, 2);
+			USNav.travelTo(2, 2);
+			USNav.travelTo(2, 1);
+			USNav.travelTo(1, 0);
+			break;
+		case 3:
+			USNav.travelTo(1, 0);
+			USNav.travelTo(2, 1);
+			USNav.travelTo(2, 2);
+			USNav.travelTo(0, 2);
+			USNav.travelTo(1, 1);
+			break;
+		case 4:
+			USNav.travelTo(0, 1);
+			USNav.travelTo(2, 1);
+			USNav.travelTo(1, 0);
+			USNav.travelTo(2, 1);
+			USNav.travelTo(2, 2);
+			break;
+		default:
+			break;
+		}
+
+	}
+
 }

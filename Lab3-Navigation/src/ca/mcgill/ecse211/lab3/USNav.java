@@ -8,7 +8,7 @@ import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
-public class Navigation {
+public class USNav {
 
 	// degrees -> radians conversion
 	private static final double toRad = Math.PI / 180.0;
@@ -44,10 +44,10 @@ public class Navigation {
 	// Constructor
 	// -----------------------------------------------------------------------------
 
-	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
+	public USNav(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
 		// constructor
-		Navigation.leftMotor = leftMotor;
-		Navigation.rightMotor = rightMotor;
+		USNav.leftMotor = leftMotor;
+		USNav.rightMotor = rightMotor;
 		odo = odometer;
 		this.isNavigating = false;
 
