@@ -138,7 +138,7 @@ public class Navigation {
 	 * @return true if another thread has called travelTo() or turnTo() and the
 	 *         method has yet to return, false otherwise
 	 */
-	public boolean isNavigating() {
+	public static boolean isNavigating() {
 		return (isNavigating) ? true : false;
 	}
 

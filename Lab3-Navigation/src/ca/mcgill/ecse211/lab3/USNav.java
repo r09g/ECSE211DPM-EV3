@@ -49,8 +49,8 @@ public class USNav {
 		USNav.leftMotor = leftMotor;
 		USNav.rightMotor = rightMotor;
 		odo = odometer;
-		this.isNavigating = false;
-
+		USNav.isNavigating = false;
+		
 	}
 
 	public static void travelTo(double x, double y) {
@@ -138,7 +138,7 @@ public class USNav {
 	 * @return true if another thread has called travelTo() or turnTo() and the
 	 *         method has yet to return, false otherwise
 	 */
-	public boolean isNavigating() {
+	public static boolean isNavigating() {
 		return (isNavigating) ? true : false;
 	}
 
