@@ -144,7 +144,7 @@ public class Lab3 {
 			odoDisplayThread.start();// starts thread
 			usPoller.start();
 			
-			USNav usnav = new USNav(leftMotor, rightMotor, odometer);
+			USNav usnav = new USNav(leftMotor, rightMotor, odometer, usDistance, usData);
 			
 			USNavpath(1);	// select path
 
@@ -197,32 +197,32 @@ public class Lab3 {
 	private static void USNavpath(int num) {
 		switch (num) {
 		case 1:
-			USNav.travelTo(0, 2);
-			USNav.travelTo(1, 1);
-			USNav.travelTo(2, 2);
-			USNav.travelTo(2, 1);
-			USNav.travelTo(1, 0);
+			USNav.run(0, 2);
+			USNav.run(1, 1);
+			USNav.run(2, 2);
+			USNav.run(2, 1);
+			USNav.run(1, 0);
 			break;
 		case 2:
-			USNav.travelTo(1, 1);
-			USNav.travelTo(0, 2);
-			USNav.travelTo(2, 2);
-			USNav.travelTo(2, 1);
-			USNav.travelTo(1, 0);
+			USNav.run(1, 1);
+			USNav.run(0, 2);
+			USNav.run(2, 2);
+			USNav.run(2, 1);
+			USNav.run(1, 0);
 			break;
 		case 3:
-			USNav.travelTo(1, 0);
-			USNav.travelTo(2, 1);
-			USNav.travelTo(2, 2);
-			USNav.travelTo(0, 2);
-			USNav.travelTo(1, 1);
+			USNav.run(1, 0);
+			USNav.run(2, 1);
+			USNav.run(2, 2);
+			USNav.run(0, 2);
+			USNav.run(1, 1);
 			break;
 		case 4:
-			USNav.travelTo(0, 1);
-			USNav.travelTo(2, 1);
-			USNav.travelTo(1, 0);
-			USNav.travelTo(2, 1);
-			USNav.travelTo(2, 2);
+			USNav.run(0, 1);
+			USNav.run(2, 1);
+			USNav.run(1, 0);
+			USNav.run(2, 1);
+			USNav.run(2, 2);
 			break;
 		default:
 			break;
