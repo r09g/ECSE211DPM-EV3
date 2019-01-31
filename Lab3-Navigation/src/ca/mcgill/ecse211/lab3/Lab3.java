@@ -11,7 +11,6 @@ import lejos.hardware.port.Port;
 import lejos.hardware.sensor.*;
 import lejos.robotics.SampleProvider;
 
-
 /**
  * This class contains Lab2 Odometry Lab implemented on the EV3 platform. This
  * class specifies constants that control the behaviour of the robot. This class
@@ -48,7 +47,7 @@ public class Lab3 {
 	// Motor Objects, and Robot related parameters
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	public static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); // left
-																														// motor
+																													// motor
 	public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
 																														// motor
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
@@ -71,28 +70,7 @@ public class Lab3 {
 	 * @throws OdometerExceptions - this method may throw OdometerExceptions
 	 */
 	public static void main(String[] args) throws OdometerExceptions {
-		
-		BangBangController bangbangController = new BangBangController(bandCenter, bandWidth, motorLow, motorHigh);
-		
-		// Setup ultrasonic sensor
-				// There are 4 steps involved:
-				// 1. Create a port object attached to a physical port (done already above)
-				// 2. Create a sensor instance and attach to port
-				// 3. Create a sample provider instance for the above and initialize operating
-				// mode
-				// 4. Create a buffer for the sensor data
 
-				@SuppressWarnings("resource") // Because we don't bother to close this resource
-				SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
-				SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from
-				// this instance
-				float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer in which data are
-				// returned
-				
-				// Setup Ultrasonic Poller // This thread samples the US and invokes
-				UltrasonicPoller usPoller = null; // the selected controller on each cycle
-				
-				usPoller = new UltrasonicPoller(usDistance, usData, bangbangController); //this is the line tht starts bang bang
 		// records button clicked by user
 		int buttonChoice;
 
@@ -122,12 +100,11 @@ public class Lab3 {
 			odoThread.start();
 			Thread odoDisplayThread = new Thread(odometryDisplay);
 			odoDisplayThread.start();
+			Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
 
 			// navigation thread
 			(new Thread() {
 				public void run() {
-					Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
-
 					// choose travelling sequence
 					SNpath(1);
 				}
@@ -135,11 +112,41 @@ public class Lab3 {
 
 		} else if (buttonChoice == Button.ID_RIGHT) { // navigation with obstacle avoidance
 
+			// ---------------------------------------------------------------------------------
+			// Ultrasonic Sensor Setup		
+			// ---------------------------------------------------------------------------------
+			BangBangController bangbangController = new BangBangController(bandCenter, bandWidth, motorLow, motorHigh);
+
+			/*
+			 * Setup ultrasonic sensor There are 4 steps involved: 1. Create a port object
+			 * attached to a physical port (done already above) 2. Create a sensor instance
+			 * and attach to port 3. Create a sample provider instance for the above and
+			 * initialize operating mode 4. Create a buffer for the sensor data
+			 */
+
+			@SuppressWarnings("resource") // Because we don't bother to close this resource
+			SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
+			SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from
+			// this instance
+			float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer in which data are
+			// returned
+			UltrasonicPoller usPoller = null; // the selected controller on each cycle
+			usPoller = new UltrasonicPoller(usDistance, usData, bangbangController);
+			
+			// ---------------------------------------------------------------------------------
+			// ---------------------------------------------------------------------------------
+
+			
 			// Start odometer and display threads
 			Thread odoThread = new Thread(odometer); // creates new odometer thread
 			odoThread.start(); // starts thread
 			Thread odoDisplayThread = new Thread(odometryDisplay); // new display thread for odometer
 			odoDisplayThread.start();// starts thread
+			usPoller.start();
+			
+			USNav usnav = new USNav(leftMotor, rightMotor, odometer);
+			
+			USNavpath(1);	// select path
 
 		} else {
 			// exits upon pressing esc button
@@ -155,35 +162,35 @@ public class Lab3 {
 	private static void SNpath(int num) {
 		switch (num) {
 		case 1:
-			Navigation.travelTo(0,2);
-			Navigation.travelTo(1,1);
-			Navigation.travelTo(2,2);
-			Navigation.travelTo(2,1);
-			Navigation.travelTo(1,0);
+			Navigation.travelTo(0, 2);
+			Navigation.travelTo(1, 1);
+			Navigation.travelTo(2, 2);
+			Navigation.travelTo(2, 1);
+			Navigation.travelTo(1, 0);
 			break;
 		case 2:
-			Navigation.travelTo(1,1);
-			Navigation.travelTo(0,2);
-			Navigation.travelTo(2,2);
-			Navigation.travelTo(2,1);
-			Navigation.travelTo(1,0);
+			Navigation.travelTo(1, 1);
+			Navigation.travelTo(0, 2);
+			Navigation.travelTo(2, 2);
+			Navigation.travelTo(2, 1);
+			Navigation.travelTo(1, 0);
 			break;
 		case 3:
-			Navigation.travelTo(1,0);
-			Navigation.travelTo(2,1);
-			Navigation.travelTo(2,2);
-			Navigation.travelTo(0,2);
-			Navigation.travelTo(1,1);
+			Navigation.travelTo(1, 0);
+			Navigation.travelTo(2, 1);
+			Navigation.travelTo(2, 2);
+			Navigation.travelTo(0, 2);
+			Navigation.travelTo(1, 1);
 			break;
 		case 4:
-			Navigation.travelTo(0,1);
-			Navigation.travelTo(2,1);
-			Navigation.travelTo(1,0);
-			Navigation.travelTo(2,1);
-			Navigation.travelTo(2,2);
+			Navigation.travelTo(0, 1);
+			Navigation.travelTo(2, 1);
+			Navigation.travelTo(1, 0);
+			Navigation.travelTo(2, 1);
+			Navigation.travelTo(2, 2);
 			break;
 		default:
-			break;			
+			break;
 		}
 	}
 
