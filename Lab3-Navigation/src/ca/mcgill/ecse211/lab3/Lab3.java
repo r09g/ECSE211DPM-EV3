@@ -1,10 +1,16 @@
 package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.*;
+import ca.mcgill.ecse211.lab3.UltrasonicPoller;
+import ca.mcgill.ecse211.lab3.BangBangController;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.port.Port;
+import lejos.hardware.sensor.*;
+import lejos.robotics.SampleProvider;
+
 
 /**
  * This class contains Lab2 Odometry Lab implemented on the EV3 platform. This
@@ -40,11 +46,16 @@ public class Lab3 {
 	// -----------------------------------------------------------------------------
 
 	// Motor Objects, and Robot related parameters
-	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); // left
+	private static final Port usPort = LocalEV3.get().getPort("S1");
+	public static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); // left
 																														// motor
-	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
+	public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")); // right
 																														// motor
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // display screen
+	private static final int bandCenter = 32; // Offset from the wall (cm)
+	private static final int bandWidth = 3; // Width of dead band (cm)
+	private static final int motorLow = 175; // Speed of slower rotating wheel (deg/sec)
+	private static final int motorHigh = 275; // Speed of the faster rotating wheel (deg/seec)
 
 	// -----------------------------------------------------------------------------
 	// Public Methods
@@ -60,7 +71,28 @@ public class Lab3 {
 	 * @throws OdometerExceptions - this method may throw OdometerExceptions
 	 */
 	public static void main(String[] args) throws OdometerExceptions {
+		
+		BangBangController bangbangController = new BangBangController(bandCenter, bandWidth, motorLow, motorHigh);
+		
+		// Setup ultrasonic sensor
+				// There are 4 steps involved:
+				// 1. Create a port object attached to a physical port (done already above)
+				// 2. Create a sensor instance and attach to port
+				// 3. Create a sample provider instance for the above and initialize operating
+				// mode
+				// 4. Create a buffer for the sensor data
 
+				@SuppressWarnings("resource") // Because we don't bother to close this resource
+				SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
+				SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from
+				// this instance
+				float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer in which data are
+				// returned
+				
+				// Setup Ultrasonic Poller // This thread samples the US and invokes
+				UltrasonicPoller usPoller = null; // the selected controller on each cycle
+				
+				usPoller = new UltrasonicPoller(usDistance, usData, bangbangController); //this is the line tht starts bang bang
 		// records button clicked by user
 		int buttonChoice;
 
