@@ -1,12 +1,15 @@
 package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.*;
+import ca.mcgill.ecse211.lab3.Lab3;
 
 import java.math.*;
 
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.sensor.*;
+import lejos.robotics.SampleProvider;
 
 public class USNav {
 
@@ -39,17 +42,27 @@ public class USNav {
 	
 	// length of tile in cm
 	public static final double TILE = 30.48;
+	
+	private static SampleProvider us;
+	
+	public static double distance;
+
+	public static float[] usData;
+	private static final double AVDDIST = 15; //distance from which robot should stop in front of block
+		
 
 	// -----------------------------------------------------------------------------
 	// Constructor
 	// -----------------------------------------------------------------------------
 
-	public USNav(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
+	public USNav(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer, SampleProvider us, float[] usData) {
 		// constructor
 		USNav.leftMotor = leftMotor;
 		USNav.rightMotor = rightMotor;
 		odo = odometer;
 		USNav.isNavigating = false;
+		this.us = us;
+		this.usData = usData;
 		
 	}
 
@@ -130,6 +143,22 @@ public class USNav {
 		isNavigating = false; // update status
 
 	}
+	
+	public static void run(double x, double y) {
+		while(true) {
+			
+			us.fetchSample(usData, 0);
+			distance = (double) (usData[0] * 100.0); 
+			if (distance <= AVDDIST) { //robot too close to obstacle
+				//go to bang bang, not sure how to do tht
+				travelTo(x,y);
+			}
+			else { //no obstacle
+				travelTo(x,y); //resume path
+			}
+		}
+	}
+	
 
 	/**
 	 * Wrapper method to determine whether robot is currently navigating by checking
@@ -174,4 +203,8 @@ public class USNav {
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
+	
+
+
+
 }

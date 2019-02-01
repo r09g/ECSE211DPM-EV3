@@ -49,7 +49,7 @@ public class Navigation {
 		Navigation.leftMotor = leftMotor;
 		Navigation.rightMotor = rightMotor;
 		odo = odometer;
-		this.isNavigating = false;
+		Navigation.isNavigating = false;
 
 	}
 
