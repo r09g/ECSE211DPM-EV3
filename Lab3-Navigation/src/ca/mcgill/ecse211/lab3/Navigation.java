@@ -139,7 +139,7 @@ public class Navigation {
 	 *         method has yet to return, false otherwise
 	 */
 	public static boolean isNavigating() {
-		return (isNavigating) ? true : false;
+		return isNavigating;
 	}
 
 	/**
