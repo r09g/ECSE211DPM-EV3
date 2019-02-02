@@ -99,9 +99,8 @@ public class Lab3 {
 			SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from
 			float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer in which data are
 
-			USNav usnav = new USNav(leftMotor, rightMotor, odometer, usDistance, usData);	// navigators
-			
 			UltrasonicMotor usMotor = new UltrasonicMotor(sensorMotor);
+			USNav usnav = new USNav(leftMotor, rightMotor, odometer, usDistance, usData, usMotor);	// navigators
 			
 			
 			// -------------------------------------------------------------------------------s--
@@ -111,7 +110,7 @@ public class Lab3 {
 			Thread odoThread = new Thread(odometer); // creates new odometer thread
 			Thread odoDisplayThread = new Thread(odometryDisplay); // new display thread for odometer
 			Thread usnavThread = new Thread(usnav);
-			Thread usThread = new Thread(usThread); //TODO i dont understand this error
+			Thread usThread = new Thread(usMotor); 
 			
 			odoThread.start(); // starts thread
 			odoDisplayThread.start();// starts thread

@@ -1,5 +1,7 @@
 package ca.mcgill.ecse211.lab3;
 
+import java.util.Arrays;
+
 import ca.mcgill.ecse211.odometer.*;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -32,16 +34,19 @@ public class USNav extends Thread {
 
 	private SampleProvider us;
 	private float[] usData;
+	private UltrasonicMotor usMotor;
 
 	private volatile boolean isNavigating;
 	private double distance;
+	private double turncount;
+	private int numObs; // number of obstacles
 
 	// -----------------------------------------------------------------------------
 	// Constructor
 	// -----------------------------------------------------------------------------
 
 	public USNav(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer,
-			SampleProvider us, float[] usData) {
+			SampleProvider us, float[] usData, UltrasonicMotor usMotor) {
 		// constructor
 		this.leftMotor = leftMotor; // left motor
 		this.rightMotor = rightMotor; // right motor
@@ -50,7 +55,8 @@ public class USNav extends Thread {
 
 		this.us = us;
 		this.usData = usData;
-
+		this.usMotor = usMotor; // motor for ultrasonic sensor
+		this.turncount = 0;
 	}
 
 	// -----------------------------------------------------------------------------
@@ -114,61 +120,22 @@ public class USNav extends Thread {
 		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), true);
 
 		while (leftMotor.isMoving() || rightMotor.isMoving()) {
+
 			// while travelling
 			// acquire filtered distance reading
-			
 			this.distance = filter();
 
-			if (distance <= this.AVVDIST) { // robot too close to obstacle
-				// TODO: implementation. When to quit bangbang and re-navigate
-				// TODO: add motor for sensor and make it turn
-
-				double error = distance - this.bandCenter; // deviation from expected band center
-
-				if (Math.abs(error) > (this.bandwidth) && error > 0) { // robot is too far
-
-					// turn left
-					Lab3.leftMotor.setSpeed(motorHigh - 110); // slow down left motor
-					Lab3.rightMotor.setSpeed(motorHigh + 70); // speed up right motor
-
-					Lab3.rightMotor.forward(); // EV3 motor hack
-					Lab3.leftMotor.forward();
-
-				} else if (Math.abs(error) > (this.bandwidth) && error < 0) { // robot is too close
-
-					// turn right
-					Lab3.leftMotor.setSpeed(motorHigh + 180); // speed up left motor
-					Lab3.rightMotor.setSpeed(10); // slow down right motor
-
-					Lab3.rightMotor.forward();// EV3 motor hack
-					Lab3.leftMotor.forward();
-
-				} else { // error within dead band
-
-					// robot to go straight
-					Lab3.leftMotor.setSpeed(motorHigh);
-					Lab3.rightMotor.setSpeed(motorHigh);
-
-					Lab3.rightMotor.forward(); // EV3 motor hack
-					Lab3.leftMotor.forward();
-
-				}
-
-			} else if (distance > 255) {
-				leftMotor.setSpeed(30); // slow down left motor
-				rightMotor.setSpeed(motorHigh + 160); // speed up right motor
-
-				rightMotor.forward();// EV3 motor hack
-				leftMotor.forward();
+			// while wall following conditions are met
+			if (this.turncount < 60 && numObs < 2 && distance <= AVVDIST) {
+				bangbang();
+				this.numObs++; // navigated past one obstacle
 				
+				usMotor.setstatus(false);	// signal motor
+				
+				travelTo(x,y);	// recalculate
+				return;
 			}
 
-			// control sensor sampling rate
-			try {
-				Thread.sleep(50);
-			} catch (Exception e) {
-				// Poor man's timed sampling
-			}
 		}
 
 		isNavigating = false;
@@ -209,23 +176,88 @@ public class USNav extends Thread {
 	}
 
 	/**
-	 * 
+	 * This is a median filter
 	 * 
 	 * @return
 	 */
 	private double filter() {
 
-		double value = 0;
+		double[] arr = new double[5];
 		for (int i = 0; i < 5; i++) {
 			us.fetchSample(usData, 0);
-			value += usData[0] * 100.0;
+			arr[i] = usData[0] * 100.0; // signal amplification
 		}
+		Arrays.sort(arr);
 
-		return value /= 5.0;
+		return arr[2]; // median value
 	}
 
-	public double readDistance() {
-		return this.distance;
+	private void bangbang() {
+
+		while (turncount < 60) {
+			
+			distance = filter();
+			// previous tacho counts
+			int prevLcount = leftMotor.getTachoCount();
+			int prevRcount = rightMotor.getTachoCount();
+
+			usMotor.setstatus(true); // tell sensor motor: currently in bangbang
+
+			double error = distance - bandCenter; // deviation from expected band center
+
+			if (Math.abs(error) > (bandwidth) && error > 0) { // robot is too far
+
+				if (Math.abs(error) > (bandwidth) && error > 0 && error < 255) {
+					// turn left
+					leftMotor.setSpeed(motorHigh - 110); // slow down left motor
+					rightMotor.setSpeed(motorHigh + 70); // speed up right motor
+
+					rightMotor.forward(); // EV3 motor hack
+					leftMotor.forward();
+				} else {
+					// at edge of wall, make sharp left turn
+					leftMotor.setSpeed(30); // slow down left motor
+					rightMotor.setSpeed(motorHigh + 160); // speed up right motor
+
+					rightMotor.forward();// EV3 motor hack
+					leftMotor.forward();
+				}
+
+			} else if (Math.abs(error) > (bandwidth) && error < 0) { // robot is too close
+
+				// turn right
+				leftMotor.setSpeed(motorHigh + 180); // speed up left motor
+				rightMotor.setSpeed(10); // slow down right motor
+
+				rightMotor.forward();// EV3 motor hack
+				leftMotor.forward();
+
+			} else { // error within dead band
+
+				// robot to go straight
+				leftMotor.setSpeed(motorHigh);
+				rightMotor.setSpeed(motorHigh);
+
+				rightMotor.forward(); // EV3 motor hack
+				leftMotor.forward();
+
+			}
+
+			// control sensor sampling rate
+			try {
+				Thread.sleep(50);
+			} catch (Exception e) {
+				// Poor man's timed sampling
+			}
+
+			// change in tachocount
+			int diffL = leftMotor.getTachoCount() - prevLcount;
+			int diffR = rightMotor.getTachoCount() - prevRcount;
+
+			// average degrees turned
+			// convert to distance in cm
+			this.turncount = this.turncount + deg2Distance(WHEEL_RAD, (diffL + diffR) / 2);
+		}
 	}
 
 	/**
@@ -259,6 +291,18 @@ public class USNav extends Thread {
 	 */
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
+	}
+
+	/**
+	 * Converts degrees of wheel rotation in to cm travelled
+	 * 
+	 * @param radius    - radius of robot wheel
+	 * @param turncount - total number of degrees turned
+	 * @return an double indicating the total distance in cm travelled equivalent to
+	 *         the degrees turned
+	 */
+	private static double deg2Distance(double radius, int turncount) {
+		return turncount / 360.0 * 2 * Math.PI * radius;
 	}
 
 }
