@@ -127,12 +127,14 @@ public class USNav extends Thread {
 
 			// while wall following conditions are met
 			if (this.turncount < 60 && numObs < 2 && distance <= AVVDIST) {
+
 				bangbang();
 				this.numObs++; // navigated past one obstacle
+				turncount = 0;	// reset turncount
 				
-				usMotor.setstatus(false);	// signal motor
-				
-				travelTo(x,y);	// recalculate
+				usMotor.setstatus(false); // signal motor
+
+				travelTo(x, y); // recalculate
 				return;
 			}
 
@@ -194,8 +196,50 @@ public class USNav extends Thread {
 
 	private void bangbang() {
 
+		double[] pos = odo.getXYT();
+		double x, y, heading;
+		x = pos[0];
+		y = pos[1];
+		heading = pos[2];
+
+		if (heading > 315 || heading < 45) {
+			// up
+			if (x < TILE) {
+				// right bangbang
+			} else {
+				// left bangbang
+			}
+		} else if (heading > 45 && heading < 135) {
+			// right
+			if (y > TILE) {
+				// right bangbang
+			} else {
+				// left bangbang
+			}
+		} else if (heading > 135 && heading < 225) {
+			// down
+			if (x > TILE) {
+				// right bangbang
+			} else {
+				// left bangbang
+			}
+		} else if (heading > 260 && heading < 280) {
+			if (y > TILE) {
+				// left bangbang
+			} else {
+				// right bangbang
+			}
+		}
+
+	}
+
+	/**
+	 * Avoid obstacle from right side
+	 */
+	private void Rbangbang() {
+
 		while (turncount < 60) {
-			
+
 			distance = filter();
 			// previous tacho counts
 			int prevLcount = leftMotor.getTachoCount();
@@ -228,6 +272,77 @@ public class USNav extends Thread {
 				// turn right
 				leftMotor.setSpeed(motorHigh + 180); // speed up left motor
 				rightMotor.setSpeed(10); // slow down right motor
+
+				rightMotor.forward();// EV3 motor hack
+				leftMotor.forward();
+
+			} else { // error within dead band
+
+				// robot to go straight
+				leftMotor.setSpeed(motorHigh);
+				rightMotor.setSpeed(motorHigh);
+
+				rightMotor.forward(); // EV3 motor hack
+				leftMotor.forward();
+
+			}
+
+			// control sensor sampling rate
+			try {
+				Thread.sleep(50);
+			} catch (Exception e) {
+				// Poor man's timed sampling
+			}
+
+			// change in tachocount
+			int diffL = leftMotor.getTachoCount() - prevLcount;
+			int diffR = rightMotor.getTachoCount() - prevRcount;
+
+			// average degrees turned
+			// convert to distance in cm
+			this.turncount = this.turncount + deg2Distance(WHEEL_RAD, (diffL + diffR) / 2);
+		}
+	}
+
+	/**
+	 * Avoid obstable from left side
+	 */
+	private void Lbangbang() {
+	
+		while (turncount < 60) {
+
+			distance = filter();
+			// previous tacho counts
+			int prevLcount = leftMotor.getTachoCount();
+			int prevRcount = rightMotor.getTachoCount();
+
+			usMotor.setstatus(true); // tell sensor motor: currently in bangbang
+
+			double error = distance - bandCenter; // deviation from expected band center
+
+			if (Math.abs(error) > (bandwidth) && error > 0) { // robot is too far
+
+				if (Math.abs(error) > (bandwidth) && error > 0 && error < 255) {
+					// turn right
+					rightMotor.setSpeed(motorHigh - 110); // slow down right motor
+					leftMotor.setSpeed(motorHigh + 70); // speed up left motor
+
+					rightMotor.forward(); // EV3 motor hack
+					leftMotor.forward();
+				} else {
+					// at edge of wall, make sharp left turn
+					rightMotor.setSpeed(30); // slow down right motor
+					leftMotor.setSpeed(motorHigh + 160); // speed up left motor
+
+					rightMotor.forward();// EV3 motor hack
+					leftMotor.forward();
+				}
+
+			} else if (Math.abs(error) > (bandwidth) && error < 0) { // robot is too close
+
+				// turn left
+				rightMotor.setSpeed(motorHigh + 180); // speed up right motor
+				leftMotor.setSpeed(10); // slow down left motor
 
 				rightMotor.forward();// EV3 motor hack
 				leftMotor.forward();
