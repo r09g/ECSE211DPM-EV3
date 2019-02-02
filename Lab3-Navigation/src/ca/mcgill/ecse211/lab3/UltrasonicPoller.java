@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.lab3;
 
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
 /**
@@ -22,15 +23,27 @@ public class UltrasonicPoller extends Thread {
 	private SampleProvider us;
 
 	/**
-	 * Controller instance, either bangbang or p-type
-	 */
-	private UltrasonicController cont;
-
-	/**
 	 * Stores sensor data read in as array of float
 	 */
 	private float[] usData;
 
+	private EV3LargeRegulatedMotor leftMotor; // left motor
+	private EV3LargeRegulatedMotor rightMotor; // right motor
+	private USNav nav;
+	
+	private boolean isAvoiding;
+	private double distance;
+
+	public static final double WHEEL_RAD = 2.1;
+	public static final double TRACK = 13.21;
+	public static final double TILE = 30.48;
+	private static final double AVDDIST = 15; // distance from which robot should stop in front of block
+
+	private static final int bandCenter = 32; // Offset from the wall (cm)
+	private static final int bandwidth = 3; // Width of dead band (cm)
+	private static final int motorLow = 175; // Speed of slower rotating wheel (deg/sec)
+	private static final int motorHigh = 275; // Speed of the faster rotating wheel (deg/sec)
+	
 	// ----------------------------------------------------------------------------
 	// Constructor
 	// ----------------------------------------------------------------------------
@@ -42,10 +55,16 @@ public class UltrasonicPoller extends Thread {
 	 * @param usData the data obtained from the ultrasonic sensor
 	 * @param cont   the controller instance
 	 */
-	public UltrasonicPoller(SampleProvider us, float[] usData, UltrasonicController cont) {
-		this.us = us;
-		this.cont = cont;
-		this.usData = usData;
+	public UltrasonicPoller(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, SampleProvider us,
+			float[] usData, USNav nav) {
+		this.us = us; // ultrasonic sensor
+		this.usData = usData; // ultrasonic sensor data sampling control
+		this.leftMotor = leftMotor;
+		this.rightMotor = rightMotor;
+		this.nav = nav;	// navigator
+		
+		this.isAvoiding = false;
+		
 	}
 
 	/*
@@ -55,27 +74,91 @@ public class UltrasonicPoller extends Thread {
 	 * @see java.lang.Thread#run()
 	 */
 	public void run() {
-		int distance;
+		
+		// while travelling
+		while (nav.isNavigating()) {
 
-		while (true) { // operates continuously
-			us.fetchSample(usData, 0); // acquire data
-			distance = (int) (usData[0] * 100.0); // extract from buffer, cast to int
+			// acquire filtered distance reading
+			this.distance = filter();
 
-			// TODO: pause navigation thread and let controller run while encountering
-			// obstacle; resume nav thread after obstacle avoided;
-			if (USNav.isNavigating() && distance < 15) {
-				// robot on the move
-				cont.processUSData(distance); // activate controller
+			if (distance <= AVDDIST) { // robot too close to obstacle
+				// TODO: implementation
 				
-			} else {
-				// do nothing
-			}
+				// let navigation wait for this to finish
+				try {
+					nav.join();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				isAvoiding = true;
+				double error = distance - this.bandCenter; // deviation from expected band center
 
+				if (Math.abs(error) > (this.bandwidth) && error > 0) { // robot is too far
+
+					// turn left
+					Lab3.leftMotor.setSpeed(motorHigh - 110); // slow down left motor
+					Lab3.rightMotor.setSpeed(motorHigh + 70); // speed up right motor
+
+					Lab3.rightMotor.forward(); // EV3 motor hack
+					Lab3.leftMotor.forward();
+
+				} else if (Math.abs(error) > (this.bandwidth) && error < 0) { // robot is too close
+
+					// turn right
+					Lab3.leftMotor.setSpeed(motorHigh + 180); // speed up left motor
+					Lab3.rightMotor.setSpeed(10); // slow down right motor
+
+					Lab3.rightMotor.forward();// EV3 motor hack
+					Lab3.leftMotor.forward();
+
+				} else { // error within dead band
+
+					// robot to go straight
+					Lab3.leftMotor.setSpeed(motorHigh);
+					Lab3.rightMotor.setSpeed(motorHigh);
+
+					Lab3.rightMotor.forward(); // EV3 motor hack
+					Lab3.leftMotor.forward();
+
+				}
+			} else if(distance > 255) {
+				
+				leftMotor.stop();
+				rightMotor.stop();
+				
+				isAvoiding = false;
+				
+				nav.notify();	// resume navigator thread
+			}
+			
+			// control sensor sampling rate
 			try {
-				Thread.sleep(50); // control sensor sampling rate
+				Thread.sleep(50);
 			} catch (Exception e) {
-			} // Poor man's timed sampling
+				// Poor man's timed sampling	
+			} 
 		}
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private double filter() {
+
+		double value = 0;
+		for (int i = 0; i < 5; i++) {
+			us.fetchSample(usData, 0);
+			value += usData[0] * 100.0;
+		}
+
+		return value /= 5.0;
+	}
+	
+	public double readDistance() {
+		return this.distance;
 	}
 
 }

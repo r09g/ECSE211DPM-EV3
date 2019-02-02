@@ -1,72 +1,70 @@
 package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.*;
-import ca.mcgill.ecse211.lab3.Lab3;
-
-import java.math.*;
-
 import lejos.hardware.Sound;
-import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.sensor.*;
 import lejos.robotics.SampleProvider;
 
-public class USNav {
+public class USNav extends Thread {
 
 	// degrees -> radians conversion
 	private static final double toRad = Math.PI / 180.0;
-
-	// radians -> degrees conversion
 	private static final double toDeg = 180.0 / Math.PI;
+
+	public static final double WHEEL_RAD = 2.1;
+	public static final double TRACK = 13.21;
+	public static final double TILE = 30.48;
+
+	private static final int bandCenter = 32; // Offset from the wall (cm)
+	private static final int bandwidth = 3; // Width of dead band (cm)
+	private static final int motorLow = 175; // Speed of slower rotating wheel (deg/sec)
+	private static final int motorHigh = 275; // Speed of the faster rotating wheel (deg/sec)
 
 	private static final int FWDSPEED = 250; // forward speed, might need to change later
 	private static final int TRNSPEED = 150; // turn speed, migth need to change later
 
-	private static EV3LargeRegulatedMotor leftMotor; // left
-	// motor
-	private static EV3LargeRegulatedMotor rightMotor; // right
-	// motor
-	public static Odometer odo; // odometer
-	static double position[]; // position data
+	private static final double AVVDIST = 15; // distance from which robot should stop in front of block
 
-	private volatile static boolean isNavigating;
+	private EV3LargeRegulatedMotor leftMotor; // left motor
+	private EV3LargeRegulatedMotor rightMotor; // right motor
+	private Odometer odo; // odometer
+	private double position[]; // position data
 
-	// wheel radius of robot
-	// this value reflects the actual value of the wheel radius
-	public static final double WHEEL_RAD = 2.1;
+	private SampleProvider us;
+	private float[] usData;
 
-	// distance between center of left and right wheels
-	// this value is tweaked to optimize the behaviours of the robot in different
-	// operation modes
-	public static final double TRACK = 13.21;
-	
-	// length of tile in cm
-	public static final double TILE = 30.48;
-	
-	private static SampleProvider us;
-	
-	public static double distance;
-
-	public static float[] usData;
-	private static final double AVDDIST = 15; //distance from which robot should stop in front of block
-		
+	private volatile boolean isNavigating;
+	private double distance;
 
 	// -----------------------------------------------------------------------------
 	// Constructor
 	// -----------------------------------------------------------------------------
 
-	public USNav(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer, SampleProvider us, float[] usData) {
+	public USNav(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer,
+			SampleProvider us, float[] usData) {
 		// constructor
-		USNav.leftMotor = leftMotor;
-		USNav.rightMotor = rightMotor;
-		odo = odometer;
-		USNav.isNavigating = false;
+		this.leftMotor = leftMotor; // left motor
+		this.rightMotor = rightMotor; // right motor
+		this.odo = odometer; // odometer
+		this.isNavigating = false; // navigating status
+
 		this.us = us;
 		this.usData = usData;
-		
+
 	}
 
-	public static void travelTo(double x, double y) {
+	// -----------------------------------------------------------------------------
+	// Run Method
+	// -----------------------------------------------------------------------------
+
+	public void run() {
+		// TODO:
+		travelTo(2, 2);
+		travelTo(0, 0);
+
+	}
+
+	private void travelTo(double x, double y) {
 		/*
 		 * this method causes the robot to travel to the absolute field location (x, y)
 		 * specified in the tile points. This method should continuously call
@@ -78,8 +76,6 @@ public class USNav {
 		// Convert coordinates x, y to length in cm
 		x = x * TILE;
 		y = y * TILE;
-		
-		isNavigating = true; // update status
 
 		position = odo.getXYT(); // current position
 
@@ -90,39 +86,97 @@ public class USNav {
 										// need to travel to get to destination
 		double dTheta = Math.atan(dy / dx) * toDeg; // calculates angle dTheta of new displacement
 													// will be in the range of [-90,90] degrees
-		
-		// our convention being north = 0 degrees + increase clockwise, this new angle is the absolute angle
-		if (dTheta >= 0 && dx >= 0) { 
+
+		// our convention being north = 0 degrees + increase clockwise, this new angle
+		// is the absolute angle
+		if (dTheta >= 0 && dx >= 0) {
 			// first quadrant
-			dTheta = 90 - dTheta;	// absolute angle
-		} else if (dTheta >= 0 && dx < 0) { 
+			dTheta = 90 - dTheta; // absolute angle
+		} else if (dTheta >= 0 && dx < 0) {
 			// 3rd quadrant
-			dTheta = 270 - dTheta; 	// absolute angle
-		} else if (dTheta < 0 && dx >= 0) { 
+			dTheta = 270 - dTheta; // absolute angle
+		} else if (dTheta < 0 && dx >= 0) {
 			// 4th quadrant
-			dTheta = 90 - dTheta; 	// absolute angle
-		} else if (dTheta < 0 && dx < 0) { 
+			dTheta = 90 - dTheta; // absolute angle
+		} else if (dTheta < 0 && dx < 0) {
 			// 2nd quadrant
-			dTheta = 270 - dTheta;	// absolute angle
+			dTheta = 270 - dTheta; // absolute angle
 		}
 
 		turnTo(dTheta); // robot turns
+
+		isNavigating = true; // update status
 
 		leftMotor.setSpeed(FWDSPEED);
 		rightMotor.setSpeed(FWDSPEED); // sets to forward speed
 
 		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
-		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), false);
+		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), true);
 
-		isNavigating = false; // update status
+		while (leftMotor.isMoving() || rightMotor.isMoving()) {
+			// while travelling
+			// acquire filtered distance reading
+			this.distance = filter();
+
+			if (distance <= this.AVVDIST) { // robot too close to obstacle
+				// TODO: implementation. When to quit bangbang and re-navigate
+				// TODO: add motor for sensor and make it turn
+
+				double error = distance - this.bandCenter; // deviation from expected band center
+
+				if (Math.abs(error) > (this.bandwidth) && error > 0) { // robot is too far
+
+					// turn left
+					Lab3.leftMotor.setSpeed(motorHigh - 110); // slow down left motor
+					Lab3.rightMotor.setSpeed(motorHigh + 70); // speed up right motor
+
+					Lab3.rightMotor.forward(); // EV3 motor hack
+					Lab3.leftMotor.forward();
+
+				} else if (Math.abs(error) > (this.bandwidth) && error < 0) { // robot is too close
+
+					// turn right
+					Lab3.leftMotor.setSpeed(motorHigh + 180); // speed up left motor
+					Lab3.rightMotor.setSpeed(10); // slow down right motor
+
+					Lab3.rightMotor.forward();// EV3 motor hack
+					Lab3.leftMotor.forward();
+
+				} else { // error within dead band
+
+					// robot to go straight
+					Lab3.leftMotor.setSpeed(motorHigh);
+					Lab3.rightMotor.setSpeed(motorHigh);
+
+					Lab3.rightMotor.forward(); // EV3 motor hack
+					Lab3.leftMotor.forward();
+
+				}
+
+			} else if (distance > 255) {
+				leftMotor.setSpeed(30); // slow down left motor
+				rightMotor.setSpeed(motorHigh + 160); // speed up right motor
+
+				rightMotor.forward();// EV3 motor hack
+				leftMotor.forward();
+				
+			}
+
+			// control sensor sampling rate
+			try {
+				Thread.sleep(50);
+			} catch (Exception e) {
+				// Poor man's timed sampling
+			}
+		}
+
+		isNavigating = false;
 
 	}
 
-	private static void turnTo(double Theta) {
+	private void turnTo(double Theta) {
 		// causes the robot to turn on point to absolute heading theta
 		// should turn at minimal angle to target
-
-		isNavigating = true; // update status
 
 		leftMotor.setSpeed(TRNSPEED);
 		rightMotor.setSpeed(TRNSPEED);
@@ -137,28 +191,10 @@ public class USNav {
 			// opposite from square driver since we turn left
 			minTheta = 360 - minTheta; // since we are turning in the opposite direction
 			rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);	
+			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
 		}
 
-		isNavigating = false; // update status
-
 	}
-	
-	public static void run(double x, double y) {
-		while(true) {
-			
-			us.fetchSample(usData, 0);
-			distance = (double) (usData[0] * 100.0); 
-			if (distance <= AVDDIST) { //robot too close to obstacle
-				//go to bang bang, not sure how to do tht
-				travelTo(x,y);
-			}
-			else { //no obstacle
-				travelTo(x,y); //resume path
-			}
-		}
-	}
-	
 
 	/**
 	 * Wrapper method to determine whether robot is currently navigating by checking
@@ -167,8 +203,28 @@ public class USNav {
 	 * @return true if another thread has called travelTo() or turnTo() and the
 	 *         method has yet to return, false otherwise
 	 */
-	public static boolean isNavigating() {
-		return (isNavigating) ? true : false;
+	public boolean isNavigating() {
+		return isNavigating;
+	}
+
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
+	private double filter() {
+
+		double value = 0;
+		for (int i = 0; i < 5; i++) {
+			us.fetchSample(usData, 0);
+			value += usData[0] * 100.0;
+		}
+
+		return value /= 5.0;
+	}
+
+	public double readDistance() {
+		return this.distance;
 	}
 
 	/**
@@ -203,8 +259,5 @@ public class USNav {
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
-	
-
-
 
 }

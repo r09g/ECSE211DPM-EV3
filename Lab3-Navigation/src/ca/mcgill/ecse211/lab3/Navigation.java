@@ -1,43 +1,28 @@
 package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.*;
-
-import java.math.*;
-
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
-public class Navigation {
+public class Navigation extends Thread {
 
 	// degrees -> radians conversion
 	private static final double toRad = Math.PI / 180.0;
-
-	// radians -> degrees conversion
 	private static final double toDeg = 180.0 / Math.PI;
 
 	private static final int FWDSPEED = 250; // forward speed, might need to change later
 	private static final int TRNSPEED = 150; // turn speed, migth need to change later
 
-	private static EV3LargeRegulatedMotor leftMotor; // left
-	// motor
-	private static EV3LargeRegulatedMotor rightMotor; // right
-	// motor
-	public static Odometer odo; // odometer
-	static double position[]; // position data
+	private EV3LargeRegulatedMotor leftMotor; // left motor
+	private EV3LargeRegulatedMotor rightMotor; // right motor
+	private Odometer odo; // odometer
+	private double position[]; // position data
 
-	private volatile static boolean isNavigating;
+	private volatile boolean isNavigating;
 
-	// wheel radius of robot
-	// this value reflects the actual value of the wheel radius
 	public static final double WHEEL_RAD = 2.1;
-
-	// distance between center of left and right wheels
-	// this value is tweaked to optimize the behaviours of the robot in different
-	// operation modes
 	public static final double TRACK = 13.21;
-	
-	// length of tile in cm
 	public static final double TILE = 30.48;
 
 	// -----------------------------------------------------------------------------
@@ -46,14 +31,29 @@ public class Navigation {
 
 	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
 		// constructor
-		Navigation.leftMotor = leftMotor;
-		Navigation.rightMotor = rightMotor;
-		odo = odometer;
-		Navigation.isNavigating = false;
+		this.leftMotor = leftMotor;
+		this.rightMotor = rightMotor;
+		this.odo = odometer;
+		this.isNavigating = false;
 
 	}
 
-	public static void travelTo(double x, double y) {
+	// -----------------------------------------------------------------------------
+	// Run Method
+	// -----------------------------------------------------------------------------
+
+	public void run() {
+		// TODO: Travel to commands
+		travelTo(2,2);
+		travelTo(0,0);
+	}
+	
+	/**
+	 * 
+	 * @param x - the x coordinate with the robot as the origin (0,0)
+	 * @param y - the y coordinate with the robot as the origin (0,0)
+	 */
+	public void travelTo(double x, double y) {
 		/*
 		 * this method causes the robot to travel to the absolute field location (x, y)
 		 * specified in the tile points. This method should continuously call
@@ -105,7 +105,7 @@ public class Navigation {
 
 	}
 
-	private static void turnTo(double Theta) {
+	private void turnTo(double Theta) {
 		// causes the robot to turn on point to absolute heading theta
 		// should turn at minimal angle to target
 
@@ -138,7 +138,7 @@ public class Navigation {
 	 * @return true if another thread has called travelTo() or turnTo() and the
 	 *         method has yet to return, false otherwise
 	 */
-	public static boolean isNavigating() {
+	public boolean isNavigating() {
 		return isNavigating;
 	}
 
@@ -174,4 +174,5 @@ public class Navigation {
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
+
 }

@@ -34,7 +34,7 @@ public class Display implements Runnable {
 
 	// a double array used to store the position data X,Y, and Theta
 	private double[] position;
-
+	
 	// -----------------------------------------------------------------------------
 	// Constructors
 	// -----------------------------------------------------------------------------
@@ -49,6 +49,7 @@ public class Display implements Runnable {
 	public Display(TextLCD lcd) throws OdometerExceptions {
 		odo = Odometer.getOdometer(); // calls method to pass odometer handle
 		this.lcd = lcd; // initializes LCD object
+
 	}
 
 	/**
@@ -98,7 +99,7 @@ public class Display implements Runnable {
 			lcd.drawString("X: " + numberFormat.format(position[0]), 0, 0);
 			lcd.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
 			lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2);
-
+			
 			// this ensures that the data is updated only once every period
 			// record current time
 			updateEnd = System.currentTimeMillis();
