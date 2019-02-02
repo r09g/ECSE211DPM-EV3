@@ -116,6 +116,7 @@ public class USNav extends Thread {
 		while (leftMotor.isMoving() || rightMotor.isMoving()) {
 			// while travelling
 			// acquire filtered distance reading
+			
 			this.distance = filter();
 
 			if (distance <= this.AVVDIST) { // robot too close to obstacle

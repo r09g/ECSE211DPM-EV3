@@ -6,6 +6,7 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.*;
 import lejos.robotics.SampleProvider;
@@ -38,6 +39,7 @@ public class Lab3 {
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	public static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); 
 	public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+	public static final EV3MediumRegulatedMotor sensorMotor = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD();
 	
 	// -----------------------------------------------------------------------------
@@ -99,6 +101,8 @@ public class Lab3 {
 
 			USNav usnav = new USNav(leftMotor, rightMotor, odometer, usDistance, usData);	// navigators
 			
+			UltrasonicMotor usMotor = new UltrasonicMotor(sensorMotor);
+			
 			
 			// -------------------------------------------------------------------------------s--
 			// ---------------------------------------------------------------------------------
@@ -107,10 +111,12 @@ public class Lab3 {
 			Thread odoThread = new Thread(odometer); // creates new odometer thread
 			Thread odoDisplayThread = new Thread(odometryDisplay); // new display thread for odometer
 			Thread usnavThread = new Thread(usnav);
+			Thread usThread = new Thread(usThread); //TODO i dont understand this error
 			
 			odoThread.start(); // starts thread
 			odoDisplayThread.start();// starts thread
 			usnavThread.start();	// **Update: paths are specified in the Navigation class
+			usThread.start();
 			
 		} else {
 			// exits upon pressing esc button
