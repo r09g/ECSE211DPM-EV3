@@ -119,7 +119,7 @@ public class USNav extends Thread {
 		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
 		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), true);
 
-		while (leftMotor.isMoving() || rightMotor.isMoving()) {
+		while (isNavigating()) {
 
 			// while travelling
 			// acquire filtered distance reading
@@ -128,11 +128,12 @@ public class USNav extends Thread {
 			// while wall following conditions are met
 			if (this.turncount < 60 && numObs < 2 && distance <= AVVDIST) {
 
-				bangbang();
+				bangbang(); // activate bangbang
+
 				this.numObs++; // navigated past one obstacle
-				turncount = 0;	// reset turncount
-				
-				usMotor.setstatus(false); // signal motor
+				turncount = 0; // reset turncount
+
+				usMotor.setstatus(0); // signal motor
 
 				travelTo(x, y); // recalculate
 				return;
@@ -140,7 +141,7 @@ public class USNav extends Thread {
 
 		}
 
-		isNavigating = false;
+		isNavigating = false; // set status
 
 	}
 
@@ -245,7 +246,7 @@ public class USNav extends Thread {
 			int prevLcount = leftMotor.getTachoCount();
 			int prevRcount = rightMotor.getTachoCount();
 
-			usMotor.setstatus(true); // tell sensor motor: currently in bangbang
+			usMotor.setstatus(1); // tell sensor motor: currently in bangbang
 
 			double error = distance - bandCenter; // deviation from expected band center
 
@@ -308,7 +309,7 @@ public class USNav extends Thread {
 	 * Avoid obstable from left side
 	 */
 	private void Lbangbang() {
-	
+
 		while (turncount < 60) {
 
 			distance = filter();
@@ -316,7 +317,7 @@ public class USNav extends Thread {
 			int prevLcount = leftMotor.getTachoCount();
 			int prevRcount = rightMotor.getTachoCount();
 
-			usMotor.setstatus(true); // tell sensor motor: currently in bangbang
+			usMotor.setstatus(2); // tell sensor motor: currently in bangbang
 
 			double error = distance - bandCenter; // deviation from expected band center
 

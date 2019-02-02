@@ -12,11 +12,11 @@ public class UltrasonicMotor extends Thread {
 	private static final int ORIGIN = 0;	// original position
 	
 	
-	private boolean wallfollowing;	// wallfollowing status
+	private int wallfollowing;	// wallfollowing status
 	
 	public UltrasonicMotor(EV3MediumRegulatedMotor sensorMotor) {
 		this.sensorMotor = sensorMotor;
-		this.wallfollowing = false;
+		this.wallfollowing = 0;
 	}
 	
 	public void run() {
@@ -29,23 +29,33 @@ public class UltrasonicMotor extends Thread {
 			sensorMotor.rotateTo(ORIGIN, false);
 			sensorMotor.rotateTo(SWITCHANGLE, false);
 			
-			if(wallfollowing) {
+			if(wallfollowing == 2) {
 				// currently obstacle avoiding
 				// turn sensor to 45 deg to wall
 				sensorMotor.setAcceleration(3000);
 				sensorMotor.rotateTo(-WALL_FOLLOWING_ANGLE, false);
-				while(wallfollowing) {/* wait until wall following ends */};
+				while(wallfollowing != 0) {/* wait until wall following ends */};
+			} else if(wallfollowing == 1) {
+				// currently obstacle avoiding
+				// turn sensor to 45 deg to wall
+				sensorMotor.setAcceleration(3000);
+				sensorMotor.rotateTo(WALL_FOLLOWING_ANGLE, false);
+				while(wallfollowing != 0) {/* wait until wall following ends */};
 			}
+			
+			
 		}
 
 	}
 	
 	/**
 	 * setter
-	 * @param wallfollowing
+	 * 
+	 * 0 = no bangbang; 1 = left bangbang; 2 = right bangbang
+	 * @param type - left or right bangbang
 	 */
-	public void setstatus(boolean wallfollowing) {
-		this.wallfollowing = wallfollowing;
+	public void setstatus(int type) {
+		this.wallfollowing = type;
 	}
 	
 }
