@@ -14,15 +14,15 @@ public class USNav extends Thread {
 	private static final double toDeg = 180.0 / Math.PI;
 
 	public static final double WHEEL_RAD = 2.1;
-	public static final double TRACK = 13.21;
+	public static final double TRACK = 13.5;
 	public static final double TILE = 30.48;
 
-	private static final int bandCenter = 32; // Offset from the wall (cm)
+	private static final int bandCenter = 15; // Offset from the wall (cm)
 	private static final int bandwidth = 3; // Width of dead band (cm)
 	private static final int motorLow = 175; // Speed of slower rotating wheel (deg/sec)
 	private static final int motorHigh = 275; // Speed of the faster rotating wheel (deg/sec)
 
-	private static final int FWDSPEED = 250; // forward speed, might need to change later
+	private static final int FWDSPEED = 350; // forward speed, might need to change later
 	private static final int TRNSPEED = 150; // turn speed, migth need to change later
 
 	private static final double AVVDIST = 15; // distance from which robot should stop in front of block
@@ -39,7 +39,7 @@ public class USNav extends Thread {
 	private volatile boolean isNavigating;
 	private double distance;
 	private double turncount;
-	private int numObs; // number of obstacles
+	private int[][] path;
 
 	// -----------------------------------------------------------------------------
 	// Constructor
@@ -57,6 +57,13 @@ public class USNav extends Thread {
 		this.usData = usData;
 		this.usMotor = usMotor; // motor for ultrasonic sensor
 		this.turncount = 0;
+		this.path = new int[][] { 
+			{0,1},
+			{2,1},
+			{2,2},
+			{1,1},
+			{2,0}
+		};
 	}
 
 	// -----------------------------------------------------------------------------
@@ -65,12 +72,19 @@ public class USNav extends Thread {
 
 	public void run() {
 		// TODO:
-		travelTo(2, 2);
-		travelTo(0, 0);
+		boolean status;
+		for (int[] inner : path) {
+			
+			status = travelTo(inner[0], inner[1]);
+			while (status == false) {
+				status = travelTo(inner[0], inner[1]);
+			}
+
+		}
 
 	}
 
-	private void travelTo(double x, double y) {
+	private boolean travelTo(double x, double y) {
 		/*
 		 * this method causes the robot to travel to the absolute field location (x, y)
 		 * specified in the tile points. This method should continuously call
@@ -113,42 +127,59 @@ public class USNav extends Thread {
 
 		isNavigating = true; // update status
 
+		leftMotor.setAcceleration(500);
+		rightMotor.setAcceleration(500);
+		
 		leftMotor.setSpeed(FWDSPEED);
 		rightMotor.setSpeed(FWDSPEED); // sets to forward speed
 
 		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
 		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), true);
 
-		while (isNavigating) {
+		while (leftMotor.isMoving() || rightMotor.isMoving()) {
 
 			// while travelling
 			// acquire filtered distance reading
 			this.distance = filter();
 
 			// while wall following conditions are met
-			if (this.turncount < 60 && numObs < 2 && distance <= AVVDIST) {
+			if (this.turncount < 60 && distance <= AVVDIST) {
+
+				leftMotor.setAcceleration(3000);
+				rightMotor.setAcceleration(3000);
+
+				leftMotor.stop(true);
+				rightMotor.stop(false);
 
 				bangbang(); // activate bangbang
 
-				this.numObs++; // navigated past one obstacle
+				leftMotor.setAcceleration(3000);
+				rightMotor.setAcceleration(3000);
+				
+				leftMotor.stop(true);
+				rightMotor.stop(false);
+
 				turncount = 0; // reset turncount
 
 				usMotor.setstatus(0); // signal motor
 
-				travelTo(x, y); // recalculate
-				return;
+				return false;
 			}
 
 		}
 
 		isNavigating = false; // set status
 
+		return true;
 	}
 
 	private void turnTo(double Theta) {
 		// causes the robot to turn on point to absolute heading theta
 		// should turn at minimal angle to target
 
+		leftMotor.setAcceleration(500);
+		rightMotor.setAcceleration(500);
+		
 		leftMotor.setSpeed(TRNSPEED);
 		rightMotor.setSpeed(TRNSPEED);
 
@@ -206,29 +237,29 @@ public class USNav extends Thread {
 		if (heading > 315 || heading < 45) {
 			// up
 			if (x < TILE) {
-				// right bangbang
+				Rbangbang(); // right bangbang
 			} else {
-				// left bangbang
+				Lbangbang(); // left bangbang
 			}
 		} else if (heading > 45 && heading < 135) {
 			// right
 			if (y > TILE) {
-				// right bangbang
+				Rbangbang(); // right bangbang
 			} else {
-				// left bangbang
+				Lbangbang(); // left bangbang
 			}
 		} else if (heading > 135 && heading < 225) {
 			// down
 			if (x > TILE) {
-				// right bangbang
+				Rbangbang(); // right bangbang
 			} else {
-				// left bangbang
+				Lbangbang(); // left bangbang
 			}
 		} else if (heading > 260 && heading < 280) {
 			if (y > TILE) {
-				// left bangbang
+				Lbangbang(); // left bangbang
 			} else {
-				// right bangbang
+				Rbangbang(); // right bangbang
 			}
 		}
 
@@ -239,39 +270,70 @@ public class USNav extends Thread {
 	 */
 	private void Rbangbang() {
 
+		leftMotor.setAcceleration(500);
+		rightMotor.setAcceleration(500);
+		
+		// turn right 90 deg
+		leftMotor.rotate(convertAngle(WHEEL_RAD, TRACK, 90.0), true);
+		rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, 90.0), false);
+
+		usMotor.setstatus(1); // tell sensor motor: currently in bangbang
+
+		while (!usMotor.ready()) {
+			// wait for motor to get ready
+		}
+
+		int tally = 0;
+
 		while (turncount < 60) {
 
+			leftMotor.setAcceleration(3000);
+			rightMotor.setAcceleration(3000);
+			
 			distance = filter();
 			// previous tacho counts
 			int prevLcount = leftMotor.getTachoCount();
 			int prevRcount = rightMotor.getTachoCount();
 
-			usMotor.setstatus(1); // tell sensor motor: currently in bangbang
-
 			double error = distance - bandCenter; // deviation from expected band center
 
 			if (Math.abs(error) > (bandwidth) && error > 0) { // robot is too far
 
-				if (Math.abs(error) > (bandwidth) && error > 0 && error < 255) {
+				if (Math.abs(error) > (bandwidth) && error > 0 && error < 160) {
 					// turn left
-					leftMotor.setSpeed(motorHigh - 110); // slow down left motor
+					leftMotor.setSpeed(motorHigh - 90); // slow down left motor
 					rightMotor.setSpeed(motorHigh + 70); // speed up right motor
 
 					rightMotor.forward(); // EV3 motor hack
 					leftMotor.forward();
+					
 				} else {
-					// at edge of wall, make sharp left turn
-					leftMotor.setSpeed(30); // slow down left motor
-					rightMotor.setSpeed(motorHigh + 160); // speed up right motor
 
-					rightMotor.forward();// EV3 motor hack
+					tally++;
+
+					// robot to go straight
+					leftMotor.setSpeed(motorHigh / 2);
+					rightMotor.setSpeed(motorHigh / 2);
+
+					rightMotor.forward(); // EV3 motor hack
 					leftMotor.forward();
+
+					if (tally > 30) {
+
+						// at edge of wall, make sharp left turn
+						leftMotor.setSpeed(150); // slow down left motor
+						rightMotor.setSpeed(motorHigh + 100); // speed up right motor
+
+						rightMotor.forward();// EV3 motor hack
+						leftMotor.forward();
+
+					}
 				}
 
 			} else if (Math.abs(error) > (bandwidth) && error < 0) { // robot is too close
 
 				// turn right
-				leftMotor.setSpeed(motorHigh + 180); // speed up left motor
+				leftMotor.setSpeed(motorHigh + 120); // speed up left motor
 				rightMotor.setSpeed(10); // slow down right motor
 
 				rightMotor.forward();// EV3 motor hack
@@ -280,8 +342,8 @@ public class USNav extends Thread {
 			} else { // error within dead band
 
 				// robot to go straight
-				leftMotor.setSpeed(motorHigh);
-				rightMotor.setSpeed(motorHigh);
+				leftMotor.setSpeed(motorHigh / 2);
+				rightMotor.setSpeed(motorHigh / 2);
 
 				rightMotor.forward(); // EV3 motor hack
 				leftMotor.forward();
@@ -310,20 +372,36 @@ public class USNav extends Thread {
 	 */
 	private void Lbangbang() {
 
-		while (turncount < 60) {
+		leftMotor.setAcceleration(500);
+		rightMotor.setAcceleration(500);
+		
+		// turn left 90 deg
+		leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, 90.0), true);
+		rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, 90.0), false);
 
+		usMotor.setstatus(2); // tell sensor motor: currently in bangbang
+
+		while (!usMotor.ready()) {
+			// wait for motor to get ready
+		}
+
+		int tally = 0;
+
+		while (turncount < 60) {
+			
+			leftMotor.setAcceleration(3000);
+			rightMotor.setAcceleration(3000);
+			
 			distance = filter();
 			// previous tacho counts
 			int prevLcount = leftMotor.getTachoCount();
 			int prevRcount = rightMotor.getTachoCount();
 
-			usMotor.setstatus(2); // tell sensor motor: currently in bangbang
-
 			double error = distance - bandCenter; // deviation from expected band center
 
 			if (Math.abs(error) > (bandwidth) && error > 0) { // robot is too far
 
-				if (Math.abs(error) > (bandwidth) && error > 0 && error < 255) {
+				if (Math.abs(error) > (bandwidth) && error > 0 && error < 160) {
 					// turn right
 					rightMotor.setSpeed(motorHigh - 110); // slow down right motor
 					leftMotor.setSpeed(motorHigh + 70); // speed up left motor
@@ -331,12 +409,23 @@ public class USNav extends Thread {
 					rightMotor.forward(); // EV3 motor hack
 					leftMotor.forward();
 				} else {
-					// at edge of wall, make sharp left turn
-					rightMotor.setSpeed(30); // slow down right motor
-					leftMotor.setSpeed(motorHigh + 160); // speed up left motor
+					tally++;
 
-					rightMotor.forward();// EV3 motor hack
+					// robot to go straight
+					leftMotor.setSpeed(motorHigh / 2);
+					rightMotor.setSpeed(motorHigh / 2);
+
+					rightMotor.forward(); // EV3 motor hack
 					leftMotor.forward();
+
+					if (tally > 30) {
+						// at edge of wall, make sharp right turn
+						rightMotor.setSpeed(150); // slow down right motor
+						leftMotor.setSpeed(motorHigh + 100); // speed up left motor
+
+						rightMotor.forward();// EV3 motor hack
+						leftMotor.forward();
+					}
 				}
 
 			} else if (Math.abs(error) > (bandwidth) && error < 0) { // robot is too close
@@ -351,8 +440,8 @@ public class USNav extends Thread {
 			} else { // error within dead band
 
 				// robot to go straight
-				leftMotor.setSpeed(motorHigh);
-				rightMotor.setSpeed(motorHigh);
+				leftMotor.setSpeed(motorHigh / 2);
+				rightMotor.setSpeed(motorHigh / 2);
 
 				rightMotor.forward(); // EV3 motor hack
 				leftMotor.forward();

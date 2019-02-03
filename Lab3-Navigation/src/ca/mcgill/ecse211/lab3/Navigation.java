@@ -11,7 +11,7 @@ public class Navigation extends Thread {
 	private static final double toRad = Math.PI / 180.0;
 	private static final double toDeg = 180.0 / Math.PI;
 
-	private static final int FWDSPEED = 250; // forward speed, might need to change later
+	private static final int FWDSPEED = 350; // forward speed, might need to change later
 	private static final int TRNSPEED = 150; // turn speed, migth need to change later
 
 	private EV3LargeRegulatedMotor leftMotor; // left motor
@@ -101,8 +101,8 @@ public class Navigation extends Thread {
 		rightMotor.setSpeed(FWDSPEED);
 
 		// Smooth Acceleration (Test)
-		leftMotor.setAcceleration(750);
-		rightMotor.setAcceleration(750);
+		leftMotor.setAcceleration(500);
+		rightMotor.setAcceleration(500);
 
 		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
 		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), false);
@@ -121,8 +121,8 @@ public class Navigation extends Thread {
 		rightMotor.setSpeed(TRNSPEED);
 		
 		// Smooth Acceleration (Test)
-		leftMotor.setAcceleration(750);
-		rightMotor.setAcceleration(750);
+		leftMotor.setAcceleration(250);
+		rightMotor.setAcceleration(250);
 
 		double minTheta = ((Theta - position[2]) + 360) % 360; // right turn angle
 

@@ -29,7 +29,7 @@ public class Lab3 {
 	// -----------------------------------------------------------------------------
 
 	private static final double WHEEL_RAD = 2.1;
-	private static final double TRACK = 13.21;
+	private static final double TRACK = 13.18;
 	private static final double TILE = 30.48;
 
 	// -----------------------------------------------------------------------------
@@ -39,7 +39,7 @@ public class Lab3 {
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	public static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")); 
 	public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
-	public static final EV3MediumRegulatedMotor sensorMotor = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("B"));
+	public static final EV3MediumRegulatedMotor sensorMotor = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("C"));
 	private static final TextLCD lcd = LocalEV3.get().getTextLCD();
 	
 	// -----------------------------------------------------------------------------
