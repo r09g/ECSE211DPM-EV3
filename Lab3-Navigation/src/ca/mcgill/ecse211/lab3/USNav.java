@@ -119,7 +119,7 @@ public class USNav extends Thread {
 		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
 		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), true);
 
-		while (isNavigating()) {
+		while (isNavigating) {
 
 			// while travelling
 			// acquire filtered distance reading

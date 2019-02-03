@@ -44,10 +44,10 @@ public class Navigation extends Thread {
 
 	public void run() {
 		// TODO: Travel to commands
-		travelTo(2,2);
-		travelTo(0,0);
+		travelTo(2, 2);
+		travelTo(0, 0);
 	}
-	
+
 	/**
 	 * 
 	 * @param x - the x coordinate with the robot as the origin (0,0)
@@ -65,7 +65,7 @@ public class Navigation extends Thread {
 		// Convert coordinates x, y to length in cm
 		x = x * TILE;
 		y = y * TILE;
-		
+
 		isNavigating = true; // update status
 
 		position = odo.getXYT(); // current position
@@ -77,26 +77,32 @@ public class Navigation extends Thread {
 										// need to travel to get to destination
 		double dTheta = Math.atan(dy / dx) * toDeg; // calculates angle dTheta of new displacement
 													// will be in the range of [-90,90] degrees
-		
-		// our convention being north = 0 degrees + increase clockwise, this new angle is the absolute angle
-		if (dTheta >= 0 && dx >= 0) { 
+
+		// our convention being north = 0 degrees + increase clockwise, this new angle
+		// is the absolute angle
+		if (dTheta >= 0 && dx >= 0) {
 			// first quadrant
-			dTheta = 90 - dTheta;	// absolute angle
-		} else if (dTheta >= 0 && dx < 0) { 
+			dTheta = 90 - dTheta; // absolute angle
+		} else if (dTheta >= 0 && dx < 0) {
 			// 3rd quadrant
-			dTheta = 270 - dTheta; 	// absolute angle
-		} else if (dTheta < 0 && dx >= 0) { 
+			dTheta = 270 - dTheta; // absolute angle
+		} else if (dTheta < 0 && dx >= 0) {
 			// 4th quadrant
-			dTheta = 90 - dTheta; 	// absolute angle
-		} else if (dTheta < 0 && dx < 0) { 
+			dTheta = 90 - dTheta; // absolute angle
+		} else if (dTheta < 0 && dx < 0) {
 			// 2nd quadrant
-			dTheta = 270 - dTheta;	// absolute angle
+			dTheta = 270 - dTheta; // absolute angle
 		}
 
 		turnTo(dTheta); // robot turns
 
+		// sets to forward speed
 		leftMotor.setSpeed(FWDSPEED);
-		rightMotor.setSpeed(FWDSPEED); // sets to forward speed
+		rightMotor.setSpeed(FWDSPEED);
+
+		// Smooth Acceleration (Test)
+		leftMotor.setAcceleration(750);
+		rightMotor.setAcceleration(750);
 
 		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
 		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), false);
@@ -113,6 +119,10 @@ public class Navigation extends Thread {
 
 		leftMotor.setSpeed(TRNSPEED);
 		rightMotor.setSpeed(TRNSPEED);
+		
+		// Smooth Acceleration (Test)
+		leftMotor.setAcceleration(750);
+		rightMotor.setAcceleration(750);
 
 		double minTheta = ((Theta - position[2]) + 360) % 360; // right turn angle
 
@@ -124,7 +134,7 @@ public class Navigation extends Thread {
 			// opposite from square driver since we turn left
 			minTheta = 360 - minTheta; // since we are turning in the opposite direction
 			rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);	
+			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
 		}
 
 		isNavigating = false; // update status
