@@ -10,6 +10,7 @@
 
 package ca.mcgill.ecse211.odometer;
 
+// non-static import
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -29,20 +30,28 @@ public class Odometer extends OdometerData implements Runnable {
 	// Constants
 	// -----------------------------------------------------------------------------
 
-	// odometer update period in ms
+	/**
+	 * Odometer update period (in ms) 
+	 */
 	private static final long ODOMETER_PERIOD = 25;
 
-	// degrees -> radians conversion
-	private static final double toRad = Math.PI / 180.0;
+	/**
+	 * A constant factor that can be applied to convert angular units in degrees to
+	 * radians
+	 */
+	private static final double TO_RAD = Math.PI / 180.0;
 
-	// radians -> degrees conversion
-	private static final double toDeg = 180.0 / Math.PI;
+	/**
+	 * A constant factor that can be applied to convert angular units in radians to
+	 * degrees
+	 */
+	private static final double TO_DEG = 180.0 / Math.PI;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables
 	// -----------------------------------------------------------------------------
 
-	// provides access to odometer data
+	// odometer instance
 	private OdometerData odoData;
 
 	// Returned as singleton
@@ -167,8 +176,8 @@ public class Odometer extends OdometerData implements Runnable {
 			rightMotorTachoCount = rightMotorTachoCountNew;
 
 			// convert angular displacement to linear displacement
-			double leftDistance = WHEEL_RAD * leftPhi * toRad;
-			double rightDistance = WHEEL_RAD * rightPhi * toRad;
+			double leftDistance = WHEEL_RAD * leftPhi * TO_RAD;
+			double rightDistance = WHEEL_RAD * rightPhi * TO_RAD;
 
 			// change in displacement of vehicle
 			double dDisp = 0.5 * (leftDistance + rightDistance);
@@ -184,9 +193,9 @@ public class Odometer extends OdometerData implements Runnable {
 			double dX = Math.sin(Theta) * dDisp;
 			double dY = Math.cos(Theta) * dDisp;
 
-			// TODO Update odometer values with new calculated values
+			// Update odometer values with new calculated values
 			// theta is in degrees
-			odo.update(dX, dY, radTheta * toDeg);
+			odo.update(dX, dY, radTheta * TO_DEG);
 
 			// this ensures that the odometer only runs once every period
 			updateEnd = System.currentTimeMillis();

@@ -16,29 +16,32 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class OdometerData {
 
+	// -----------------------------------------------------------------------------
+	// Class Variables
+	// -----------------------------------------------------------------------------
+	
 	// Position parameters
 	private volatile double x; // x-axis position
 	private volatile double y; // y-axis position
 	private volatile double theta; // Head angle
 
-	// Class control variables
-		private volatile static int numberOfIntances = 0; // Number of OdometerData
-															// objects instantiated
-														// so far
-	private static final int MAX_INSTANCES = 1; // Maximum number of
-												// OdometerData instances
+	// Number of OdometerData objects instantiated so far
+	private volatile static int numberOfIntances = 0;
+
+	// Maximum number of OdometerData instances
+	private static final int MAX_INSTANCES = 1;
 
 	// Thread control tools
-	private static Lock lock = new ReentrantLock(true); // Fair lock for
-														// concurrent writing
-	private volatile boolean isReseting = false; // Indicates if a thread is
-													// trying to reset any
-													// position parameters
-	private Condition doneReseting = lock.newCondition(); // Let other threads
-															// know that a reset
-															// operation is
-															// over.
+	// Fair lock for concurrent writing
+	private static Lock lock = new ReentrantLock(true);
 
+	// Indicates if a thread is trying to reset any position parameters
+	private volatile boolean isReseting = false;
+
+	// Let other threads know that a reset operation is over.
+	private Condition doneReseting = lock.newCondition();
+
+	// OdometerData instance
 	private static OdometerData odoData = null;
 
 	/**
@@ -51,13 +54,18 @@ public class OdometerData {
 		this.theta = 0;
 	}
 
+	// -----------------------------------------------------------------------------
+	// Public Methods
+	// -----------------------------------------------------------------------------
+
 	/**
 	 * OdometerData factory. Returns an OdometerData instance and makes sure that
 	 * only one instance is ever created. If the user tries to instantiate multiple
 	 * objects, the method throws a MultipleOdometerDataException.
 	 * 
 	 * @return An OdometerData object
-	 * @throws OdometerExceptions
+	 * @throws OdometerExceptions - Exception if more than one odometer instance
+	 *                            exists
 	 */
 	public synchronized static OdometerData getOdometerData() throws OdometerExceptions {
 		if (odoData != null) { // Return existing object
@@ -83,8 +91,8 @@ public class OdometerData {
 	 * @return the odometer data.
 	 */
 	public double[] getXYT() {
-		double[] position = new double[3];	// stores position data
-		lock.lock();	// acquire lock and control access to synchronize threads
+		double[] position = new double[3]; // stores position data
+		lock.lock(); // acquire lock and control access to synchronize threads
 		try {
 			while (isReseting) { // If a reset operation is being executed, wait
 				// until it is over.
@@ -101,7 +109,7 @@ public class OdometerData {
 			// Print exception to screen
 			e.printStackTrace();
 		} finally {
-			lock.unlock();		// release lock to and unblock access
+			lock.unlock(); // release lock to and unblock access
 		}
 
 		return position;
@@ -117,11 +125,11 @@ public class OdometerData {
 	 * @param dtheta
 	 */
 	public void update(double dx, double dy, double dtheta) {
-		
+
 		// thread synchronization
-		lock.lock();	// acquire lock
-		isReseting = true;	// flag to indicate currently resetting
-		
+		lock.lock(); // acquire lock
+		isReseting = true; // flag to indicate currently resetting
+
 		// update position values
 		try {
 			x += dx;
@@ -134,7 +142,7 @@ public class OdometerData {
 			doneReseting.signalAll(); // Let the other threads know that you are
 										// done reseting
 		} finally {
-			lock.unlock();	// release lock
+			lock.unlock(); // release lock
 		}
 
 	}
@@ -147,7 +155,7 @@ public class OdometerData {
 	 * @param theta the value of theta
 	 */
 	public void setXYT(double x, double y, double theta) {
-		lock.lock(); //acquire lock
+		lock.lock(); // acquire lock
 		isReseting = true;
 		try {
 			this.x = x;
@@ -167,7 +175,7 @@ public class OdometerData {
 	 * @param x the value of x
 	 */
 	public void setX(double x) {
-		lock.lock(); //acquire lock
+		lock.lock(); // acquire lock
 		isReseting = true;
 		try {
 			this.x = x;
@@ -203,7 +211,7 @@ public class OdometerData {
 	 * @param theta the value of theta
 	 */
 	public void setTheta(double theta) {
-		lock.lock(); //acquire lock
+		lock.lock(); // acquire lock
 		isReseting = true;
 		try {
 			this.theta = theta;
