@@ -63,31 +63,11 @@ public class Lab3 {
 	 * ultrasonic sensor. The motor is connected to port C on the EV3 brick.
 	 */
 	public static final EV3MediumRegulatedMotor SENSOR_MOTOR = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("C"));
-
+	
 	/**
-	 * A constant factor that can be applied to convert angular units in degrees to
-	 * radians
-	 */
-	public static final double TO_RAD = Math.PI / 180.0;
-
-	/**
-	 * A constant factor that can be applied to convert angular units in radians to
-	 * degrees
-	 */
-	public static final double TO_DEG = 180.0 / Math.PI;
-
-	/**
-	 * The speed at which the robot moves straight (in rpm)
-	 */
-	public static final int FWDSPEED = 250;
-
-	/**
-	 * The speed at which the robot turns in a stationary fashion (in rpm)
-	 */
-	public static final int TRNSPEED = 150;
-
-	/**
-	 * 
+	 * This 2D array specifies the path for the robot to travel. Each coordinate
+	 * point is stored as an integer array, and the five coordinates are stored in a
+	 * 2D int array
 	 */
 	public static final int[][] PATH = new int[][] {
 //		{ 0, 2 }, { 1, 1 }, { 2, 2 }, { 2, 1 }, { 1, 0 }
@@ -97,7 +77,7 @@ public class Lab3 {
 	};
 
 	// -----------------------------------------------------------------------------
-	// Public Constants
+	// Private Constants
 	// -----------------------------------------------------------------------------
 
 	/**
@@ -173,10 +153,10 @@ public class Lab3 {
 			float[] usData = new float[usDistance.sampleSize()]; // buffer to store sensor data acquired
 
 			// instance of the motor that turns the ultrasonic sensor
-			UltrasonicMotor usMotor = new UltrasonicMotor(SENSOR_MOTOR);
+			UltrasonicMotor usMotor = new UltrasonicMotor();
 
 			// instance of the navigator with obstacle avoidance
-			USNav usnav = new USNav(LEFT_MOTOR, RIGHT_MOTOR, odometer, usDistance, usData, usMotor);
+			USNav usnav = new USNav(odometer, usDistance, usData, usMotor);
 
 			// Create odometer, LCD display, navigator, and ultrasonic sensor motor threads
 			// ultrasonic sensor motor thread is here to make the motor turn the ultrasonic

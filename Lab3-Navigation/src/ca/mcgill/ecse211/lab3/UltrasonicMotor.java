@@ -1,10 +1,10 @@
 package ca.mcgill.ecse211.lab3;
 
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
+import static ca.mcgill.ecse211.lab3.Lab3.SENSOR_MOTOR;
 
 public class UltrasonicMotor extends Thread {
 
-	private EV3MediumRegulatedMotor sensorMotor;
 	private static final int USSPEED = 300; //speed of sensor motor, might need to change
 	private static final int SWITCH_ANGLE = 30; //angle at which motor stops rotating in one direction and starts rotating
 											//in the other
@@ -14,29 +14,28 @@ public class UltrasonicMotor extends Thread {
 	private int wallfollowing;	// wallfollowing status
 	private boolean ready4turn;
 	
-	public UltrasonicMotor(EV3MediumRegulatedMotor sensorMotor) {
-		this.sensorMotor = sensorMotor;
+	public UltrasonicMotor() {
 		this.wallfollowing = 0;
 	}
 	
 	public void run() {
 
-		sensorMotor.setAcceleration(500);
+		SENSOR_MOTOR.setAcceleration(500);
 
 		while (true) {
 			
 			ready4turn = false;
 			
-			sensorMotor.rotateTo(-SWITCH_ANGLE, false);
-			sensorMotor.rotateTo(ORIGIN, false);
-			sensorMotor.rotateTo(SWITCH_ANGLE, false);
+			SENSOR_MOTOR.rotateTo(-SWITCH_ANGLE, false);
+			SENSOR_MOTOR.rotateTo(ORIGIN, false);
+			SENSOR_MOTOR.rotateTo(SWITCH_ANGLE, false);
 			
 			if(wallfollowing == 2) {
 				// currently obstacle avoiding
 				// turn sensor RIGHT to 45 deg to wall
-				sensorMotor.setAcceleration(500);
-				sensorMotor.rotateTo(-WALL_FOLLOWING_ANGLE, false);
-				sensorMotor.stop(false);
+				SENSOR_MOTOR.setAcceleration(500);
+				SENSOR_MOTOR.rotateTo(-WALL_FOLLOWING_ANGLE, false);
+				SENSOR_MOTOR.stop(false);
 
 				ready4turn = true;
 				
@@ -46,9 +45,9 @@ public class UltrasonicMotor extends Thread {
 			} else if(wallfollowing == 1) {
 				// currently obstacle avoiding
 				// turn sensor LEFT to 45 deg to wall
-				sensorMotor.setAcceleration(500);
-				sensorMotor.rotateTo(WALL_FOLLOWING_ANGLE, false);
-				sensorMotor.stop(false);
+				SENSOR_MOTOR.setAcceleration(500);
+				SENSOR_MOTOR.rotateTo(WALL_FOLLOWING_ANGLE, false);
+				SENSOR_MOTOR.stop(false);
 
 				ready4turn = true;
 				
