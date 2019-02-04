@@ -7,7 +7,6 @@ import ca.mcgill.ecse211.odometer.*;
 import static ca.mcgill.ecse211.lab3.Lab3.LEFT_MOTOR;
 import static ca.mcgill.ecse211.lab3.Lab3.RIGHT_MOTOR;
 import static ca.mcgill.ecse211.lab3.Lab3.TILE;
-import static ca.mcgill.ecse211.lab3.Lab3.WHEEL_RAD;
 import static ca.mcgill.ecse211.lab3.Lab3.PATH;
 
 /**
@@ -41,7 +40,13 @@ public class Navigation extends Thread {
 	 * the center of the right wheel. Not imported from Lab3 because track needs to
 	 * be tuned specifically for simple navigation
 	 */
-	private static final double TRACK = 13.30;
+	private static final double TRACK = 13.21;
+
+	/**
+	 * The radius (in cm) of the left/right wheels of the EV3 robot. Wheel rad not
+	 * imported from Lab3 class specifically for simple navigation adjustments
+	 */
+	private static final double WHEEL_RAD = 2.2;
 
 	/**
 	 * A constant factor that can be applied to convert angular units in degrees to
@@ -111,7 +116,7 @@ public class Navigation extends Thread {
 	/**
 	 * The heading/Theta value of the robot initially
 	 */
-	private static final int INITIAL_ANGLE = 360;
+	private static final int INITIAL_ANGLE = 0;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables
@@ -228,20 +233,20 @@ public class Navigation extends Thread {
 		turnTo(dTheta); // robot turns at minimum angle
 
 		// smooth acceleration so that wheels do not slip
-		LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 		RIGHT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
+		LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 
 		// sets both motors to forward speed
-		LEFT_MOTOR.setSpeed(FWDSPEED);
 		RIGHT_MOTOR.setSpeed(FWDSPEED);
+		LEFT_MOTOR.setSpeed(FWDSPEED);
 
 		// rotates both motors for a fixed number of degrees equivalent to ds, the
 		// distance from the robot's current location to the next destination point,
 		// equivalent as travelling straight. The boolean flag parameter indicates
 		// whether method returns immediately, to allow simultaneous execution of both
 		// rotate() methods. The method waits for the right motor to complete.
-		LEFT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), true);
-		RIGHT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), false);
+		RIGHT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), true);
+		LEFT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), false);
 
 		isNavigating = false; // update navigation status
 	}
@@ -266,14 +271,14 @@ public class Navigation extends Thread {
 
 		if (minTheta > INITIAL_ANGLE && minTheta <= HALF_CIRCLE) {
 			// angle is already minimum angle, robot should turn clockwise
-			LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-			RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+			RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), true);
+			LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), false);
 		} else if (minTheta > HALF_CIRCLE && minTheta < FULL_CIRCLE) {
 			// angle is not minimum angle, robot should turn counter-clockwise to the
 			// complementary angle of a full circle 360 degrees
 			minTheta = FULL_CIRCLE - minTheta;
-			LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-			RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+			RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
+			LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
 		}
 
 		isNavigating = false; // update navigation status

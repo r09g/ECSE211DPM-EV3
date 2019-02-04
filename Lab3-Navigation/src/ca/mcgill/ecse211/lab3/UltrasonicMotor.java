@@ -112,7 +112,7 @@ public class UltrasonicMotor extends Thread {
 			SENSOR_MOTOR.rotateTo(ORIGIN, false);
 			SENSOR_MOTOR.rotateTo(SWITCH_ANGLE, false);
 
-			if (wallfollowing == RIGHT_BANGBANG) { // currently obstacle avoiding in right bangbang
+			if (wallfollowing == LEFT_BANGBANG) { // currently obstacle avoiding in right bangbang
 
 				SENSOR_MOTOR.setAcceleration(SMOOTH_ACCELERATION); // ensure smoother turn
 
@@ -125,7 +125,7 @@ public class UltrasonicMotor extends Thread {
 				while (wallfollowing != NOT_AVOIDING) {
 					// do nothing
 				}
-			} else if (wallfollowing == LEFT_BANGBANG) { // currently obstacle avoiding in left bangbang
+			} else if (wallfollowing == RIGHT_BANGBANG) { // currently obstacle avoiding in left bangbang
 
 				SENSOR_MOTOR.setAcceleration(SMOOTH_ACCELERATION); // ensure smoother turn
 

@@ -488,8 +488,8 @@ public class USNav extends Thread {
 				bangbang(); // activate bangbang
 
 				// stop robot
-				LEFT_MOTOR.stop(true);
-				RIGHT_MOTOR.stop(false);
+				RIGHT_MOTOR.stop(true);
+				LEFT_MOTOR.stop(false);
 
 				// smoother acceleration to avoid wheel slipping
 				LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
