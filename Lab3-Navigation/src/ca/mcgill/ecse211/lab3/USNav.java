@@ -3,17 +3,41 @@ package ca.mcgill.ecse211.lab3;
 // non-static imports
 import java.util.Arrays;
 import ca.mcgill.ecse211.odometer.*;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
 // static imports from Lab3 class
 import static ca.mcgill.ecse211.lab3.Lab3.LEFT_MOTOR;
 import static ca.mcgill.ecse211.lab3.Lab3.RIGHT_MOTOR;
-import static ca.mcgill.ecse211.lab3.Lab3.SENSOR_MOTOR;
 import static ca.mcgill.ecse211.lab3.Lab3.TILE;
 import static ca.mcgill.ecse211.lab3.Lab3.WHEEL_RAD;
 import static ca.mcgill.ecse211.lab3.Lab3.PATH;
 
+/**
+ * <p>
+ * This class implements the advanced navigator with the ultrasonic sensor. Some
+ * of the existing motor instances and a few constants not dependent on
+ * navigation. This class extends the Thread class to allow simultaneous
+ * execution, so that other classes can work alongside this class. Helper
+ * methods are added at the end to make conversions easier.
+ * 
+ * <p>
+ * The robot completes a path with a total of 5 points, specified using a
+ * coordinate system relative to the start of the robot. The robot is (0,0),
+ * with the front set as 0 degrees Theta, the right as the +x direction, and the
+ * front as the +y direction. Theta increases when turning in the clockwise
+ * direction. The robot first turns to face the point it is travelling to, and
+ * then travels to that point.
+ * 
+ * <p>
+ * The robot uses the ultrasonic sensor to detect obstacles and avoid them if
+ * necessary, using either the left bangbang mode or the right bangbang mode.
+ * There are many constants in this class that are related to the bangbang
+ * controllers.
+ * 
+ * @author Raymond Yang
+ * @author Erica De Petrillo
+ * 
+ */
 public class USNav extends Thread {
 
 	// -----------------------------------------------------------------------------
@@ -28,12 +52,6 @@ public class USNav extends Thread {
 	private static final double TRACK = 13.21;
 
 	/**
-	 * A constant factor that can be applied to convert angular units in degrees to
-	 * radians
-	 */
-	private static final double TO_RAD = Math.PI / 180.0;
-
-	/**
 	 * A constant factor that can be applied to convert angular units in radians to
 	 * degrees
 	 */
@@ -43,11 +61,6 @@ public class USNav extends Thread {
 	 * The speed at which the robot moves straight (in rpm)
 	 */
 	private static final int FWDSPEED = 250;
-
-	/**
-	 * The speed at which the robot turns in a stationary fashion (in rpm)
-	 */
-	private static final int TURNSPEED = 150;
 
 	/**
 	 * Angle correction for Quadrant 1 and 4. Arctan returns the correct angle and
@@ -95,7 +108,7 @@ public class USNav extends Thread {
 	/**
 	 * The heading/Theta value of the robot initially
 	 */
-	private static final int INITIAL_ANGLE = 360;
+	private static final int INITIAL_ANGLE = 0;
 
 	/**
 	 * Robot's ideal offset from the wall (in cm)
@@ -109,22 +122,152 @@ public class USNav extends Thread {
 	private static final int BANDWIDTH = 3;
 
 	/**
-	 * The slow speed for the motor, used in bangbang controller (in deg/sec)
-	 */
-	private static final int motorLow = 175;
-
-	/**
 	 * The fast speed for the motor, used in bangbang controller (in deg/sec)
 	 */
-	private static final int motorHigh = 275;
+	private static final int MOTOR_HIGH = 275;
+
+	/**
+	 * The medium speed for the motor, used in bangbang controller (in deg/sec)
+	 */
+	private static final int MOTOR_MEDIUM = 137;
 
 	/**
 	 * The distance that triggers the bangbang controller to avoid the obstacle (in
 	 * cm)
 	 */
-	private static final double AVOID_DISTANCE = 15;
+	private static final int AVOID_DISTANCE = 15;
 
+	/**
+	 * A value that controls the maximum distance (in cm) the robot travels in
+	 * bangbang mode, allows exiting of obstacle avoidance state
+	 */
+	private static final int MAX_AVOID_DISTANCE = 55;
+
+	/**
+	 * A signal indicating the robot is currently not in obstacle avoidance mode.
+	 * This is mainly used to signal the ultrasonic motor to sweep the sensor
+	 */
 	private static final int NOT_AVOIDING = 0;
+
+	/**
+	 * A signal indicating the robot is currently in right bangbang mode. This is
+	 * mainly used to signal the ultrasonic motor to turn the motor left to face the
+	 * wall and hold it there
+	 */
+	private static final int RIGHT_BANGBANG = 1;
+
+	/**
+	 * A signal indicating the robot is currently in left bangbang mode. This is
+	 * mainly used to signal the ultrasonic motor to turn the motor right to face
+	 * the wall and hold it there
+	 */
+	private static final int LEFT_BANGBANG = 2;
+
+	/**
+	 * The clockwise angle turned from Theta = 0 (north). This is the 45 degree line
+	 * in quadrant 2. This is used in deciding whether to execute left bangbang or
+	 * right bangbang
+	 */
+	private static final int TOP_LEFT = 315;
+
+	/**
+	 * The clockwise angle turned from Theta = 0 (north). This is the 45 degree line
+	 * in quadrant 1. This is used in deciding whether to execute left bangbang or
+	 * right bangbang
+	 */
+	private static final int TOP_RIGHT = 45;
+
+	/**
+	 * The clockwise angle turned from Theta = 0 (north). This is the 45 degree line
+	 * in quadrant 3. This is used in deciding whether to execute left bangbang or
+	 * right bangbang
+	 */
+	private static final int BOTTOM_LEFT = 225;
+
+	/**
+	 * The clockwise angle turned from Theta = 0 (north). This is the 45 degree line
+	 * in quadrant 4. This is used in deciding whether to execute left bangbang or
+	 * right bangbang
+	 */
+	private static final int BOTTOM_RIGHT = 135;
+
+	/**
+	 * This is the threshold for ultrasonic sensor readings. Values above this
+	 * threshold activate the tally (counter) and tells the robot that it might need
+	 * to make a turn rather than adjustments
+	 */
+	private static final int DISTANCE_THRESHOLD = 160;
+
+	/**
+	 * The threshold needed for the tally (counter). If this is satisfied then a
+	 * left turn is executed rather than left adjustments
+	 */
+	private static final int MAX_TALLY = 30;
+
+	/**
+	 * Value of left adjustment needed for left motor in right bangbang mode
+	 */
+	private static final int R_LEFT_ADJUSTMENT = 90;
+
+	/**
+	 * Value of right adjustment needed for right motor in right bangbang mode
+	 */
+	private static final int R_RIGHT_ADJUSTMENT = 70;
+
+	/**
+	 * Value of left turn adjustment needed for left motor in right bangbang mode
+	 */
+	private static final int R_LT_LM_ADJUSTMENT = 150;
+
+	/**
+	 * Value of left turn adjustment needed for right motor in right bangbang mode
+	 */
+	private static final int R_LT_RM_ADJUSTMENT = 375;
+
+	/**
+	 * Value of right turn adjustment needed for left motor in right bangbang mode
+	 */
+	private static final int R_RT_LM_ADJUSTMENT = 395;
+
+	/**
+	 * Value of right turn adjustment needed for right motor in right bangbang mode
+	 */
+	private static final int R_RT_RM_ADJUSTMENT = 10;
+
+	/**
+	 * Value of left adjustment needed for left shift in left bangbang mode
+	 */
+	private static final int L_LEFT_ADJUSTMENT = 70;
+
+	/**
+	 * Value of right adjustment needed for right shift in left bangbang mode
+	 */
+	private static final int L_RIGHT_ADJUSTMENT = 110;
+
+	/**
+	 * Value of right turn adjustment needed for left motor in left bangbang mode
+	 */
+	private static final int L_RT_LM_ADJUSTMENT = 375;
+
+	/**
+	 * Value of right turn adjustment needed for right motor in left bangbang mode
+	 */
+	private static final int L_RT_RM_ADJUSTMENT = 150;
+
+	/**
+	 * Value of left turn adjustment needed for left motor in left bangbang mode
+	 */
+	private static final int L_LT_LM_ADJUSTMENT = 10;
+
+	/**
+	 * Value of left turn adjustment needed for right motor in left bangbang mode
+	 */
+	private static final int L_LT_RM_ADJUSTMENT = 455;
+
+	/**
+	 * The sleep time (in ms) to control ultrasonic ssensor sampling rate
+	 */
+	private static final int IDLE_TIME = 50;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables
@@ -243,6 +386,10 @@ public class USNav extends Thread {
 		}
 	}
 
+	// -----------------------------------------------------------------------------
+	// Public Methods
+	// -----------------------------------------------------------------------------
+	
 	/**
 	 * <p>
 	 * Controls the robot to travel to the coordinate (x,y) with the robot's initial
@@ -272,7 +419,7 @@ public class USNav extends Thread {
 	 * @param x - the x coordinate of the destination
 	 * @param y - the y coordinate of the destination
 	 */
-	private void travelTo(double x, double y) {
+	public void travelTo(double x, double y) {
 
 		// Convert coordinates x, y to length in cm
 		x = x * TILE;
@@ -396,7 +543,7 @@ public class USNav extends Thread {
 	}
 
 	/**
-	 * Wrapper method to determine whether robot is currently navigating by checking
+	 * Getter method to determine whether robot is currently navigating by checking
 	 * class variable {@code isNavigating}
 	 * 
 	 * @return true if another thread has called travelTo() or turnTo() and the
@@ -405,6 +552,10 @@ public class USNav extends Thread {
 	public boolean isNavigating() {
 		return isNavigating;
 	}
+	
+	// -----------------------------------------------------------------------------
+	// Private Method
+	// -----------------------------------------------------------------------------
 
 	/**
 	 * This is a median filter. The filter takes 5 consecutive readings from the
@@ -437,141 +588,136 @@ public class USNav extends Thread {
 		double y = pos[1];
 		double heading = pos[2];
 
-		if (heading > 315 || heading < 45) {
-			// up
-			if (x < TILE) {
+		// The logic determines the robot's current position in the coordinate system,
+		// and chooses the style of bangbang that allows the robot to go around the
+		// obstacle from the inside (the side near the center point of the coordinate
+		// system (1,1)
+		if (heading > TOP_LEFT || heading < TOP_RIGHT) {
+			// the robot is travelling north
+			if (x < TILE) { // if the robot is on the left part of board
 				Rbangbang(); // right bangbang
-			} else {
+			} else { // if the robot is on the right part of board
 				Lbangbang(); // left bangbang
 			}
-		} else if (heading > 45 && heading < 135) {
-			// right
-			if (y > TILE) {
+		} else if (heading > TOP_RIGHT && heading < BOTTOM_RIGHT) {
+			// the robot is travelling east
+			if (y > TILE) { // if the robot is on the upper part of board
 				Rbangbang(); // right bangbang
-			} else {
+			} else { // if the robot is on the lower part of board
 				Lbangbang(); // left bangbang
 			}
-		} else if (heading > 135 && heading < 225) {
-			// down
-			if (x > TILE) {
+		} else if (heading > BOTTOM_RIGHT && heading < BOTTOM_LEFT) {
+			// the robot is travelling south
+			if (x > TILE) { // if the robot is on the right part of board
 				Rbangbang(); // right bangbang
-			} else {
+			} else { // if the robot is on the left part of board
 				Lbangbang(); // left bangbang
 			}
-		} else if (heading > 260 && heading < 280) {
-			if (y > TILE) {
+		} else if (heading > BOTTOM_LEFT && heading < TOP_LEFT) {
+			// the robot is travelling west
+			if (y > TILE) { // if the robot is on the upper part of board
 				Lbangbang(); // left bangbang
-			} else {
+			} else { // if the robot is on the lower part of board
 				Rbangbang(); // right bangbang
 			}
 		}
-
 	}
 
 	/**
-	 * Avoid obstacle from right side
+	 * Original version of bangbang controller that avoids the obstacle from the
+	 * right side. The robot is turned 90 degrees to the right and the ultrasonic
+	 * sensor is turned to face left before starting Rbangbang() mode
 	 */
 	private void Rbangbang() {
 
+		// smooth acceleration to reduce wheel slip
 		LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 		RIGHT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 
-		// turn right 90 deg
+		// turn robot 90 degrees to the right, left wheel forward and right wheel
+		// backward
 		LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, 90.0), true);
 		RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, 90.0), false);
 
-		usMotor.setstatus(1); // tell sensor motor: currently in bangbang
-
+		usMotor.setstatus(RIGHT_BANGBANG); // turn sensor motor to face the wall on left
 		while (!usMotor.ready()) {
-			// wait for motor to get ready
+			// wait for sensor to get in position
 		}
+		int tally = 0; // a counter used in bangbang for turning around corners
 
-		int tally = 0;
+		// implementation of bangbang controller
+		while (turncount < MAX_AVOID_DISTANCE) { // check for total bangbang distance
 
-		while (turncount < 55) {
-
+			// smooth acceleration to reduce wheel slip
 			LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 			RIGHT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 
-			distance = medianFilter();
-			// previous tacho counts
+			distance = medianFilter(); // get filtered sensor reading
+
+			// record starting tacho counts for computing distance travelled in bangbang
 			int prevLcount = LEFT_MOTOR.getTachoCount();
 			int prevRcount = RIGHT_MOTOR.getTachoCount();
 
-			double error = distance - bandCenter; // deviation from expected band center
+			double error = distance - BANDCENTER; // deviation from expected band center
 
-			if (Math.abs(error) > (bandwidth) && error > 0) { // robot is too far
-
-				if (Math.abs(error) > (bandwidth) && error > 0 && error < 160) {
-					// turn left
-					LEFT_MOTOR.setSpeed(motorHigh - 90); // slow down left motor
-					RIGHT_MOTOR.setSpeed(motorHigh + 70); // speed up right motor
-
-					LEFT_MOTOR.forward();
-					RIGHT_MOTOR.forward(); // EV3 motor hack
-
+			if (Math.abs(error) > (BANDWIDTH) && error > 0) { // robot is too far
+				if (Math.abs(error) > (BANDWIDTH) && error > 0 && error < DISTANCE_THRESHOLD) {
+					// make left adjustments not left turn
+					LEFT_MOTOR.setSpeed(MOTOR_HIGH - R_LEFT_ADJUSTMENT); // slow down left motor
+					RIGHT_MOTOR.setSpeed(MOTOR_HIGH + R_RIGHT_ADJUSTMENT); // speed up right motor
+					LEFT_MOTOR.forward(); // EV3 motor hack
+					RIGHT_MOTOR.forward();
 				} else {
-
-					tally++;
-
-					// robot to go straight
-					LEFT_MOTOR.setSpeed(motorHigh / 2);
-					RIGHT_MOTOR.setSpeed(motorHigh / 2);
-
-					LEFT_MOTOR.forward();
-					RIGHT_MOTOR.forward(); // EV3 motor hack
-
-					if (tally > 30) {
-
-						// at edge of wall, make sharp left turn
-						LEFT_MOTOR.setSpeed(150); // slow down left motor
-						RIGHT_MOTOR.setSpeed(motorHigh + 100); // speed up right motor
-
+					// make a left turns
+					tally++; // increment counter
+					if (tally > MAX_TALLY) {
+						// at edge of wall, make left turn
+						LEFT_MOTOR.setSpeed(R_LT_LM_ADJUSTMENT); // slow down left motor
+						RIGHT_MOTOR.setSpeed(R_LT_RM_ADJUSTMENT); // speed up right motor
 						LEFT_MOTOR.forward();
 						RIGHT_MOTOR.forward();// EV3 motor hack
-
+					} else {
+						// robot to go straight slower while counter not satisfied
+						LEFT_MOTOR.setSpeed(MOTOR_MEDIUM);
+						RIGHT_MOTOR.setSpeed(MOTOR_MEDIUM);
+						LEFT_MOTOR.forward(); // EV3 motor hack
+						RIGHT_MOTOR.forward();
 					}
 				}
-
-			} else if (Math.abs(error) > (bandwidth) && error < 0) { // robot is too close
-
-				// turn right
-				LEFT_MOTOR.setSpeed(motorHigh + 120); // speed up left motor
-				RIGHT_MOTOR.setSpeed(10); // slow down right motor
-
+			} else if (Math.abs(error) > (BANDWIDTH) && error < 0) { // robot is too close
+				// make right adjustments
+				LEFT_MOTOR.setSpeed(R_RT_LM_ADJUSTMENT); // speed up left motor
+				RIGHT_MOTOR.setSpeed(R_RT_RM_ADJUSTMENT); // slow down right motor
 				LEFT_MOTOR.forward();
 				RIGHT_MOTOR.forward();// EV3 motor hack
-
 			} else { // error within dead band
-
-				// robot to go straight
-				LEFT_MOTOR.setSpeed(motorHigh / 2);
-				RIGHT_MOTOR.setSpeed(motorHigh / 2);
-
+				// robot to go straight while in deadband
+				LEFT_MOTOR.setSpeed(MOTOR_MEDIUM);
+				RIGHT_MOTOR.setSpeed(MOTOR_MEDIUM);
 				LEFT_MOTOR.forward();
 				RIGHT_MOTOR.forward(); // EV3 motor hack
-
 			}
 
 			// control sensor sampling rate
 			try {
-				Thread.sleep(50);
+				Thread.sleep(IDLE_TIME);
 			} catch (Exception e) {
 				// Poor man's timed sampling
 			}
 
-			// change in tachocount
+			// change in tachocount, final - initial
 			int diffL = LEFT_MOTOR.getTachoCount() - prevLcount;
 			int diffR = RIGHT_MOTOR.getTachoCount() - prevRcount;
 
-			// average degrees turned
-			// convert to distance in cm
+			// average distance travelled in bangbang
 			this.turncount = this.turncount + deg2Distance(WHEEL_RAD, (diffL + diffR) / 2);
 		}
 	}
 
 	/**
-	 * Avoid obstable from left side
+	 * Mirror version of bangbang controller that avoids the obstacle from the left
+	 * side. The robot is turned 90 degrees to the left and the ultrasonic sensor is
+	 * turned to face right before starting Lbangbang() mode
 	 */
 	private void Lbangbang() {
 
@@ -582,15 +728,13 @@ public class USNav extends Thread {
 		LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, 90.0), true);
 		RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, 90.0), false);
 
-		usMotor.setstatus(2); // tell sensor motor: currently in bangbang
-
+		usMotor.setstatus(LEFT_BANGBANG); // tell sensor motor: currently in bangbang
 		while (!usMotor.ready()) {
 			// wait for motor to get ready
 		}
+		int tally = 0; // a counter used in bangbang for turning around corners
 
-		int tally = 0;
-
-		while (turncount < 60) {
+		while (turncount < MAX_AVOID_DISTANCE) {
 
 			LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
 			RIGHT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
@@ -600,70 +744,58 @@ public class USNav extends Thread {
 			int prevLcount = LEFT_MOTOR.getTachoCount();
 			int prevRcount = RIGHT_MOTOR.getTachoCount();
 
-			double error = distance - bandCenter; // deviation from expected band center
+			double error = distance - BANDCENTER; // deviation from expected band center
 
-			if (Math.abs(error) > (bandwidth) && error > 0) { // robot is too far
+			if (Math.abs(error) > (BANDWIDTH) && error > 0) { // robot is too far
 
-				if (Math.abs(error) > (bandwidth) && error > 0 && error < 160) {
+				if (Math.abs(error) > (BANDWIDTH) && error > 0 && error < DISTANCE_THRESHOLD) {
 					// turn right
-					LEFT_MOTOR.setSpeed(motorHigh + 70); // speed up left motor
-					RIGHT_MOTOR.setSpeed(motorHigh - 110); // slow down right motor
-
+					LEFT_MOTOR.setSpeed(MOTOR_HIGH + L_LEFT_ADJUSTMENT); // speed up left motor
+					RIGHT_MOTOR.setSpeed(MOTOR_HIGH - L_RIGHT_ADJUSTMENT); // slow down right motor
 					LEFT_MOTOR.forward();
 					RIGHT_MOTOR.forward(); // EV3 motor hack
 				} else {
-					tally++;
-
-					// robot to go straight
-					LEFT_MOTOR.setSpeed(motorHigh / 2);
-					RIGHT_MOTOR.setSpeed(motorHigh / 2);
-
-					LEFT_MOTOR.forward();
-					RIGHT_MOTOR.forward(); // EV3 motor hack
-
-					if (tally > 30) {
-						// at edge of wall, make sharp right turn
-						LEFT_MOTOR.setSpeed(motorHigh + 100); // speed up left motor
-						RIGHT_MOTOR.setSpeed(150); // slow down right motor
-
+					tally++; // increment counter
+					if (tally > MAX_TALLY) {
+						// at edge of wall, make right turn
+						LEFT_MOTOR.setSpeed(L_RT_LM_ADJUSTMENT); // speed up left motor
+						RIGHT_MOTOR.setSpeed(L_RT_RM_ADJUSTMENT); // slow down right motor
 						LEFT_MOTOR.forward();
 						RIGHT_MOTOR.forward();// EV3 motor hack
+					} else {
+						// robot to go straight slower while counter not satisfied
+						LEFT_MOTOR.setSpeed(MOTOR_MEDIUM);
+						RIGHT_MOTOR.setSpeed(MOTOR_MEDIUM);
+						LEFT_MOTOR.forward(); // EV3 motor hack
+						RIGHT_MOTOR.forward();
 					}
 				}
-
-			} else if (Math.abs(error) > (bandwidth) && error < 0) { // robot is too close
-
+			} else if (Math.abs(error) > (BANDWIDTH) && error < 0) { // robot is too close
 				// turn left
-				LEFT_MOTOR.setSpeed(10); // slow down left motor
-				RIGHT_MOTOR.setSpeed(motorHigh + 180); // speed up right motor
-
-				LEFT_MOTOR.forward();
-				RIGHT_MOTOR.forward();// EV3 motor hack
-
+				LEFT_MOTOR.setSpeed(L_LT_LM_ADJUSTMENT); // slow down left motor
+				RIGHT_MOTOR.setSpeed(L_LT_RM_ADJUSTMENT); // speed up right motor
+				LEFT_MOTOR.forward(); // EV3 motor hack
+				RIGHT_MOTOR.forward();
 			} else { // error within dead band
-
 				// robot to go straight
-				LEFT_MOTOR.setSpeed(motorHigh / 2);
-				RIGHT_MOTOR.setSpeed(motorHigh / 2);
-
+				LEFT_MOTOR.setSpeed(MOTOR_MEDIUM);
+				RIGHT_MOTOR.setSpeed(MOTOR_MEDIUM);
 				RIGHT_MOTOR.forward(); // EV3 motor hack
 				LEFT_MOTOR.forward();
-
 			}
 
 			// control sensor sampling rate
 			try {
-				Thread.sleep(50);
+				Thread.sleep(IDLE_TIME);
 			} catch (Exception e) {
 				// Poor man's timed sampling
 			}
 
-			// change in tachocount
+			// change in tachocount, final - initial
 			int diffL = LEFT_MOTOR.getTachoCount() - prevLcount;
 			int diffR = RIGHT_MOTOR.getTachoCount() - prevRcount;
 
-			// average degrees turned
-			// convert to distance in cm
+			// average distance travelled in bangbang
 			this.turncount = this.turncount + deg2Distance(WHEEL_RAD, (diffL + diffR) / 2);
 		}
 	}
@@ -702,7 +834,7 @@ public class USNav extends Thread {
 	}
 
 	/**
-	 * Converts degrees of wheel rotation in to cm travelled
+	 * Helper method. Converts degrees of wheel rotation to distance in cm travelled
 	 * 
 	 * @param radius    - radius of robot wheel
 	 * @param turncount - total number of degrees turned

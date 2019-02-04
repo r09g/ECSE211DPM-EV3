@@ -12,11 +12,11 @@ import static ca.mcgill.ecse211.lab3.Lab3.PATH;
 
 /**
  * <p>
- * This class implements the simple navigator. Most of the constants are
- * introduced through importing from the Lab3 class. This class extends the
- * Thread class to allow simultaneous execution, so that other classes can work
- * alongside this class. Helper methods are added at the end to make conversions
- * easier.
+ * This class implements the simple navigator. Some of the existing motor
+ * instances and a few constants not dependent on navigation. This class extends
+ * the Thread class to allow simultaneous execution, so that other classes can
+ * work alongside this class. Helper methods are added at the end to make
+ * conversions easier.
  * 
  * <p>
  * The robot completes a path with a total of 5 points, specified using a
@@ -170,6 +170,10 @@ public class Navigation extends Thread {
 
 	}
 
+	// -----------------------------------------------------------------------------
+	// Public Methods
+	// -----------------------------------------------------------------------------
+
 	/**
 	 * Controls the robot to travel to the coordinate (x,y) with the robot's initial
 	 * starting location as the origin. This is done by retrieving current position
@@ -285,6 +289,10 @@ public class Navigation extends Thread {
 	public boolean isNavigating() {
 		return isNavigating;
 	}
+
+	// -----------------------------------------------------------------------------
+	// Private Methods
+	// -----------------------------------------------------------------------------
 
 	/**
 	 * This is a static method allows the conversion of a distance to the total
