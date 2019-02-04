@@ -6,7 +6,7 @@ public class UltrasonicMotor extends Thread {
 
 	private EV3MediumRegulatedMotor sensorMotor;
 	private static final int USSPEED = 300; //speed of sensor motor, might need to change
-	private static final int SWITCH_ANGLE = 45; //angle at which motor stops rotating in one direction and starts rotating
+	private static final int SWITCH_ANGLE = 30; //angle at which motor stops rotating in one direction and starts rotating
 											//in the other
 	private static final int WALL_FOLLOWING_ANGLE = 75;	// left side wallfollowing angle
 	private static final int ORIGIN = 0;	// original position

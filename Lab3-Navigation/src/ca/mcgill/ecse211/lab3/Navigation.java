@@ -1,51 +1,104 @@
 package ca.mcgill.ecse211.lab3;
 
+// non-static imports
 import ca.mcgill.ecse211.odometer.*;
-import lejos.hardware.Sound;
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
+// static imports from Lab3 class
+import static ca.mcgill.ecse211.lab3.Lab3.LEFT_MOTOR;
+import static ca.mcgill.ecse211.lab3.Lab3.RIGHT_MOTOR;
+import static ca.mcgill.ecse211.lab3.Lab3.SENSOR_MOTOR;
+import static ca.mcgill.ecse211.lab3.Lab3.TILE;
+import static ca.mcgill.ecse211.lab3.Lab3.WHEEL_RAD;
+import static ca.mcgill.ecse211.lab3.Lab3.TO_RAD;
+import static ca.mcgill.ecse211.lab3.Lab3.TO_DEG;
+import static ca.mcgill.ecse211.lab3.Lab3.FWDSPEED;
+import static ca.mcgill.ecse211.lab3.Lab3.TRNSPEED;
+import static ca.mcgill.ecse211.lab3.Lab3.PATH;
+
+/**
+ * <p>
+ * This class implements the simple navigator. Most of the constants are
+ * introduced through importing from the Lab3 class. This class extends the
+ * Thread class to allow simultaneous execution, so that other classes can work
+ * alongside this class. Helper methods are added at the end to make conversions
+ * easier.
+ * 
+ * <p>
+ * The robot completes a path with a total of 5 points, specified using a
+ * coordinate system relative to the start of the robot. The robot is (0,0),
+ * with the front set as 0 degrees Theta, the right as the +x direction, and the
+ * front as the +y direction. Theta increases when turning in the clockwise
+ * direction. The robot first turns to face the point it is travelling to, and
+ * then travels to that point.
+ * 
+ * @author Raymond Yang
+ * @author Erica De Petrillo
+ * 
+ */
 public class Navigation extends Thread {
 
-	// degrees -> radians conversion
-	private static final double toRad = Math.PI / 180.0;
-	private static final double toDeg = 180.0 / Math.PI;
+	// -----------------------------------------------------------------------------
+	// Constants
+	// -----------------------------------------------------------------------------
 
-	private static final int FWDSPEED = 350; // forward speed, might need to change later
-	private static final int TRNSPEED = 150; // turn speed, migth need to change later
+	/**
+	 * The width (in cm) of the robot measured from the center of the left wheel to
+	 * the center of the right wheel. Not imported from Lab3 in case tuning is
+	 * needed specifically for simple navigation
+	 */
+	private static final double TRACK = 13.30;
+	
+	// -----------------------------------------------------------------------------
+	// Class Variables
+	// -----------------------------------------------------------------------------
 
-	private EV3LargeRegulatedMotor leftMotor; // left motor
-	private EV3LargeRegulatedMotor rightMotor; // right motor
-	private Odometer odo; // odometer
-	private double position[]; // position data
+	/**
+	 * The odometer instance
+	 */
+	private Odometer odo;
 
+	/**
+	 * Records odometer data returned, in a double precision array, specifying X, Y,
+	 * and Theta values
+	 */
+	private double position[];
+
+	/**
+	 * A volatile boolean variable to indicate whether robot is currently travelling
+	 * along a path, from one way point to the next. The volatile keyword tells the
+	 * thread to check the current value of this variable in the main memory first
+	 */
 	private volatile boolean isNavigating;
-
-	public static final double WHEEL_RAD = 2.1;
-	public static final double TRACK = 13.21;
-	public static final double TILE = 30.48;
 
 	// -----------------------------------------------------------------------------
 	// Constructor
 	// -----------------------------------------------------------------------------
 
-	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
-		// constructor
-		this.leftMotor = leftMotor;
-		this.rightMotor = rightMotor;
+	/**
+	 * Constructor for this class, sets up the odometer instance to allow access to
+	 * position data and initializes the isNavigating flag to false
+	 * 
+	 * @param odometer - the odometer instance passed from Lab3, gives access to
+	 *                 retrieve position data
+	 */
+	public Navigation(Odometer odometer) {
 		this.odo = odometer;
 		this.isNavigating = false;
-
 	}
 
 	// -----------------------------------------------------------------------------
 	// Run Method
 	// -----------------------------------------------------------------------------
 
+	/**
+	 * The run() method that is called when the thread is started
+	 */
 	public void run() {
-		// TODO: Travel to commands
-		travelTo(2, 2);
-		travelTo(0, 0);
+
+		for (int[] inner : PATH) {
+			travelTo(inner[0], inner[1]);
+		}
+
 	}
 
 	/**
@@ -75,8 +128,8 @@ public class Navigation extends Thread {
 		double dy = y - position[1]; // displacment in y
 		double ds = Math.hypot(dx, dy); // calculates the hypotenuse of dx and dy --> gives the displacement robot will
 										// need to travel to get to destination
-		double dTheta = Math.atan(dy / dx) * toDeg; // calculates angle dTheta of new displacement
-													// will be in the range of [-90,90] degrees
+		double dTheta = Math.atan(dy / dx) * TO_DEG; // calculates angle dTheta of new displacement
+														// will be in the range of [-90,90] degrees
 
 		// our convention being north = 0 degrees + increase clockwise, this new angle
 		// is the absolute angle
@@ -97,15 +150,15 @@ public class Navigation extends Thread {
 		turnTo(dTheta); // robot turns
 
 		// sets to forward speed
-		leftMotor.setSpeed(FWDSPEED);
-		rightMotor.setSpeed(FWDSPEED);
+		LEFT_MOTOR.setSpeed(FWDSPEED);
+		RIGHT_MOTOR.setSpeed(FWDSPEED);
 
 		// Smooth Acceleration (Test)
-		leftMotor.setAcceleration(500);
-		rightMotor.setAcceleration(500);
+		LEFT_MOTOR.setAcceleration(500);
+		RIGHT_MOTOR.setAcceleration(500);
 
-		leftMotor.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
-		rightMotor.rotate(convertDistance(WHEEL_RAD, ds), false);
+		LEFT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), true); // from square driver, goes straight
+		RIGHT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), false);
 
 		isNavigating = false; // update status
 
@@ -117,24 +170,21 @@ public class Navigation extends Thread {
 
 		isNavigating = true; // update status
 
-		leftMotor.setSpeed(TRNSPEED);
-		rightMotor.setSpeed(TRNSPEED);
-		
 		// Smooth Acceleration (Test)
-		leftMotor.setAcceleration(250);
-		rightMotor.setAcceleration(250);
+		LEFT_MOTOR.setAcceleration(250);
+		RIGHT_MOTOR.setAcceleration(250);
 
 		double minTheta = ((Theta - position[2]) + 360) % 360; // right turn angle
 
 		if (minTheta > 0 && minTheta <= 180) { // already min angle, turn right
-			leftMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-			rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false); // from square driver
+			LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
+			RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false); // from square driver
 		} else if (minTheta > 180 && minTheta < 360) { // will not be minimal angle by turning right
 			// turn left
 			// opposite from square driver since we turn left
 			minTheta = 360 - minTheta; // since we are turning in the opposite direction
-			rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+			LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), true);
+			RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), false);
 		}
 
 		isNavigating = false; // update status
