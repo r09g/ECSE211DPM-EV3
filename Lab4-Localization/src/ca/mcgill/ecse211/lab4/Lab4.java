@@ -9,8 +9,14 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.*;
 import lejos.robotics.SampleProvider;
+import ca.mcgill.ecse211.lab3.Display;
+import ca.mcgill.ecse211.odometer.*;
 
 public class Lab4 {
+
+  public static final double WHEEL_RAD = 2.1;
+  public static final double TRACK = 13.21;
+  public static final double TILE = 30.48;
 
   public static final EV3LargeRegulatedMotor LEFT_MOTOR =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
@@ -26,9 +32,13 @@ public class Lab4 {
   // Main Method
   // -----------------------------------------------------------------------------
   
-  public static void main(String[] args) {
+  public static void main(String[] args) throws OdometerExceptions {
     
     int buttonChoice; // variable to record button clicked by user
+    
+    Odometer odometer = Odometer.getOdometer(LEFT_MOTOR, RIGHT_MOTOR, TRACK, WHEEL_RAD);
+    
+    Display odometryDisplay = new Display(LCD);
     
     do {
       LCD.clear();
