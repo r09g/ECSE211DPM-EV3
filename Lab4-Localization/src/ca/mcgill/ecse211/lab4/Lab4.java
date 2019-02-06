@@ -9,7 +9,6 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.*;
 import lejos.robotics.SampleProvider;
-import ca.mcgill.ecse211.lab3.Display;
 import ca.mcgill.ecse211.odometer.*;
 
 public class Lab4 {
@@ -44,17 +43,37 @@ public class Lab4 {
       LCD.clear();
       LCD.drawString("< Left  |  Right >", 0, 0);
       LCD.drawString("        |         ", 0, 1);
-      LCD.drawString(" Rising | Falling ", 0, 2);
-      LCD.drawString("  Edge  |   Edge  ", 0, 3);
+      LCD.drawString("   US   |  Light  ", 0, 2);
+      LCD.drawString("  Local |  Local  ", 0, 3);
       buttonChoice = Button.waitForAnyPress();
     } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT
         && buttonChoice != Button.ID_ESCAPE);
 
     if(buttonChoice == Button.ID_LEFT) {
-      // TODO: rising edge 
+      // TODO: Ultrasonic Localizer
       
+      do {
+        LCD.clear();
+        LCD.drawString("< Left  |  Right >", 0, 0);
+        LCD.drawString("        |         ", 0, 1);
+        LCD.drawString("Falling |  Rising ", 0, 2);
+        LCD.drawString(" Edge   |   Edge  ", 0, 3);
+        buttonChoice = Button.waitForAnyPress();
+      } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT
+          && buttonChoice != Button.ID_ESCAPE);
+      
+      if(buttonChoice == Button.ID_LEFT) {
+        // TODO: falling edge
+        
+      } else if(buttonChoice == Button.ID_RIGHT) {
+        // TODO: rising edge
+        
+      } else {
+        System.exit(0);
+      }
+
     } else if(buttonChoice == Button.ID_RIGHT) {
-      // TODO: falling edge
+      // TODO: Light Localizer
       
     } else {
       System.exit(0); 
