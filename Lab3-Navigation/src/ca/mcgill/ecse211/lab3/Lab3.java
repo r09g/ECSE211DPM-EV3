@@ -73,10 +73,12 @@ public class Lab3 {
    * This 2D array specifies the path for the robot to travel. Each coordinate point is stored as an
    * integer array, and the five coordinates are stored in a 2D int array
    */
-  public static final int[][] PATH = new int[][] {{0, 2}, {1, 1}, {2, 2}, {2, 1}, {1, 0}
-      // { 1, 1 }, { 0, 2 }, { 2, 2 }, { 2, 1 }, { 1, 0 }
-      // { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 }
-      // { 0, 1 }, { 1, 2 }, { 1, 0 }, { 2, 1 }, { 2, 2 }
+  public static final int[][] PATH = new int[][] {
+    {2,1},{1,1},{1,2},{2,0}
+//      {0, 2}, {1, 1}, {2, 2}, {2, 1}, {1, 0}
+//      { 1, 1 }, { 0, 2 }, { 2, 2 }, { 2, 1 }, { 1, 0 }
+//      { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 }
+//      { 0, 1 }, { 1, 2 }, { 1, 0 }, { 2, 1 }, { 2, 2 }
   };
 
   // -----------------------------------------------------------------------------
