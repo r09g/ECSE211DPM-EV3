@@ -22,3 +22,6 @@ __EV3 Wifi__
 
 __EV3 Parts List__
 - [Parts](EV3-Parts-List.pdf)
+
+__EV3 Button__
+- Force Exit: Hold down center and down buttons to force exit a running program.
