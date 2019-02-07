@@ -20,6 +20,8 @@ public class UltrasonicLocalizer extends Thread {
   private static final double THRESHOLD = 40;
   private static final double MARGIN = 5;
   private static final double TURN_CIRCLE = 360.0;
+  private static final double TURN_BUFFER = 90.0;
+
 
   private static final int FALLING_EDGE = Button.ID_LEFT;
   private static final int RISING_EDGE = Button.ID_RIGHT;
@@ -83,6 +85,9 @@ public class UltrasonicLocalizer extends Thread {
 
     alpha = (T1 + T2) / 2;
 
+//    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), true);
+//    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), false);
+    
     while (true) {
       double distance = medianFilter();
 
@@ -102,7 +107,7 @@ public class UltrasonicLocalizer extends Thread {
 
     beta = (T3 + T4) / 2;
 
-    REcorrect(alpha, beta);
+    FEcorrect(alpha, beta);
   }
 
   /**
@@ -150,12 +155,19 @@ public class UltrasonicLocalizer extends Thread {
 
     beta = (T3 + T4) / 2;
 
-    FEcorrect(alpha, beta);
+    REcorrect(alpha, beta);
 
   }
 
   private double FEcorrect(double alpha, double beta) {
     return 255.0 - (alpha + beta) / 2.0;
+    
+//    if(Math.abs(alpha - beta) <= 180) {
+//      return 255.0 - (alpha + beta) / 2.0;
+//    } else {
+//      return 45.0 - (alpha + beta) / 2.0;
+//    }
+    
   }
 
   private double REcorrect(double alpha, double beta) {
