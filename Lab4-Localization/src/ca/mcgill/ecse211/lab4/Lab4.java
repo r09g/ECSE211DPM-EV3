@@ -39,41 +39,35 @@ public class Lab4 {
     
     Display odometryDisplay = new Display(LCD);
     
+    // US sensor initialization
+    @SuppressWarnings("resource")
+    SensorModes usSensor = new EV3UltrasonicSensor(US_PORT);
+    SampleProvider usDistance = usSensor.getMode("Distance");
+    float[] usData = new float[usDistance.sampleSize()];
+
+    
     do {
       LCD.clear();
       LCD.drawString("< Left  |  Right >", 0, 0);
       LCD.drawString("        |         ", 0, 1);
-      LCD.drawString("   US   |  Light  ", 0, 2);
-      LCD.drawString("  Local |  Local  ", 0, 3);
+      LCD.drawString("Falling |  Rising ", 0, 2);
+      LCD.drawString(" Edge   |   Edge  ", 0, 3);
       buttonChoice = Button.waitForAnyPress();
     } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT
         && buttonChoice != Button.ID_ESCAPE);
 
-    if(buttonChoice == Button.ID_LEFT) {
-      // TODO: Ultrasonic Localizer
+    if(buttonChoice == Button.ID_LEFT || buttonChoice == Button.ID_RIGHT) {
+      // TODO: Falling Edge or Rising Edge
       
-      do {
-        LCD.clear();
-        LCD.drawString("< Left  |  Right >", 0, 0);
-        LCD.drawString("        |         ", 0, 1);
-        LCD.drawString("Falling |  Rising ", 0, 2);
-        LCD.drawString(" Edge   |   Edge  ", 0, 3);
-        buttonChoice = Button.waitForAnyPress();
-      } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT
-          && buttonChoice != Button.ID_ESCAPE);
+      UltrasonicLocalizer usloc = new UltrasonicLocalizer(buttonChoice, usDistance, usData);
       
-      if(buttonChoice == Button.ID_LEFT) {
-        // TODO: falling edge
-        
-      } else if(buttonChoice == Button.ID_RIGHT) {
-        // TODO: rising edge
-        
-      } else {
-        System.exit(0);
-      }
-
-    } else if(buttonChoice == Button.ID_RIGHT) {
-      // TODO: Light Localizer
+      Thread odoThread = new Thread(odometer);
+      Thread odoDisplayThread = new Thread(odometryDisplay);
+      Thread uslocThread = new Thread(usloc);
+      
+      odoThread.start();
+      odoDisplayThread.start();
+      uslocThread.start();
       
     } else {
       System.exit(0); 
