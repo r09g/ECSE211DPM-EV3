@@ -85,9 +85,9 @@ public class UltrasonicLocalizer extends Thread {
 
     alpha = (T1 + T2) / 2;
 
-//    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), true);
-//    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), false);
-    
+    // LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), true);
+    // RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), false);
+
     while (true) {
       double distance = medianFilter();
 
@@ -136,6 +136,9 @@ public class UltrasonicLocalizer extends Thread {
 
     alpha = (T1 + T2) / 2;
 
+    // LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), true);
+    // RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), false);
+
     while (true) {
       double distance = medianFilter();
 
@@ -161,19 +164,26 @@ public class UltrasonicLocalizer extends Thread {
 
   private double FEcorrect(double alpha, double beta) {
     return 255.0 - (alpha + beta) / 2.0;
-    
-//    if(Math.abs(alpha - beta) <= 180) {
+
+//    if (Math.abs(alpha - beta) <= 180) {
 //      return 255.0 - (alpha + beta) / 2.0;
 //    } else {
 //      return 45.0 - (alpha + beta) / 2.0;
 //    }
-    
+
   }
 
   private double REcorrect(double alpha, double beta) {
     return 45.0 - (alpha + beta) / 2.0;
+
+//    if (Math.abs(alpha - beta) <= 180) {
+//      return 255.0 - (alpha + beta) / 2.0;
+//    } else {
+//      return 45.0 - (alpha + beta) / 2.0;
+//    }
+
   }
-  
+
   /**
    * This is a median filter. The filter takes 5 consecutive readings from the ultrasonic sensor,
    * amplifies them to increase sensor sensitivity, sorts them, and picks the median to minimize the
