@@ -49,20 +49,26 @@ public class UltrasonicLocalizer extends Thread {
     LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_CIRCLE), true);
     RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_CIRCLE), true);
 
+    double dTheta = 0;
+    
     if (type == FALLING_EDGE) {
       // falling edge
-      fallingEdge();
+      dTheta = fallingEdge();
     } else if (type == RISING_EDGE) {
       // rising edge
-      risingEdge();
+      dTheta = risingEdge();
     }
 
+    odometer.setTheta(odometer.getXYT()[2] + dTheta);
+    
+    LEFT_MOTOR
+    
   }
 
   /**
    * 
    */
-  private void fallingEdge() {
+  private double fallingEdge() {
 
     double T1, T2, alpha, T3, T4, beta;
 
@@ -107,13 +113,13 @@ public class UltrasonicLocalizer extends Thread {
 
     beta = (T3 + T4) / 2;
 
-    FEcorrect(alpha, beta);
+    return FEcorrect(alpha, beta);
   }
 
   /**
    * 
    */
-  private void risingEdge() {
+  private double risingEdge() {
 
     double T1, T2, alpha, T3, T4, beta;
 
@@ -158,7 +164,7 @@ public class UltrasonicLocalizer extends Thread {
 
     beta = (T3 + T4) / 2;
 
-    REcorrect(alpha, beta);
+    return REcorrect(alpha, beta);
 
   }
 
