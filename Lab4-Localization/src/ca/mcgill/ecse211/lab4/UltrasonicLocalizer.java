@@ -61,7 +61,7 @@ public class UltrasonicLocalizer extends Thread {
 
     odometer.setTheta(odometer.getXYT()[2] + dTheta);
     
-    LEFT_MOTOR
+   // LEFT_MOTOR
     
   }
 
