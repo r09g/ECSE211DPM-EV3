@@ -29,7 +29,7 @@ public class Display implements Runnable {
 
     // the odometer object
     private Odometer odo;
-
+    
     // the display LCD screen object
     private TextLCD lcd;
 
@@ -51,7 +51,6 @@ public class Display implements Runnable {
     public Display(TextLCD lcd) throws OdometerExceptions {
         odo = Odometer.getOdometer(); // calls method to pass odometer handle
         this.lcd = lcd; // initializes LCD object
-
     }
 
     /**
@@ -104,10 +103,10 @@ public class Display implements Runnable {
             // T: #.##
             // --------------------
             DecimalFormat numberFormat = new DecimalFormat("######0.00");
-            lcd.drawString("X: " + numberFormat.format(position[0]), 0, 0);
-            lcd.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
-            lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2);
-
+//            lcd.drawString("X: " + numberFormat.format(position[0]), 0, 0);
+//            lcd.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
+//            lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2);
+            
             // this ensures that the data is updated only once every period
             // record current time
             updateEnd = System.currentTimeMillis();
@@ -125,5 +124,5 @@ public class Display implements Runnable {
         } while ((updateEnd - tStart) <= timeout);
 
     }
-
+    
 }
