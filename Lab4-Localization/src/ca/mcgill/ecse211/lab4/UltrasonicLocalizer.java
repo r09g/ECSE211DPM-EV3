@@ -5,12 +5,12 @@ import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.robotics.SampleProvider;
 import ca.mcgill.ecse211.odometer.*;
+import java.util.Arrays;
 // static imports
 import static ca.mcgill.ecse211.lab4.Lab4.LEFT_MOTOR;
 import static ca.mcgill.ecse211.lab4.Lab4.RIGHT_MOTOR;
 import static ca.mcgill.ecse211.lab4.Lab4.TRACK;
 import static ca.mcgill.ecse211.lab4.Lab4.WHEEL_RAD;
-import java.util.Arrays;
 
 public class UltrasonicLocalizer extends Thread {
 
@@ -22,9 +22,6 @@ public class UltrasonicLocalizer extends Thread {
   private static final int INITIAL_ANGLE = 0;
   private static final int HALF_CIRCLE = 180;
   private static final int FULL_CIRCLE = 360;
-
-  private double distance;
-  private int filterControl;
 
   private static final int FALLING_EDGE = Button.ID_LEFT;
   private static final int RISING_EDGE = Button.ID_RIGHT;
@@ -43,8 +40,6 @@ public class UltrasonicLocalizer extends Thread {
     this.usData = usData;
     this.usDistance = usDistance;
     this.type = buttonChoice;
-    this.distance = 0;
-    this.filterControl = 0;
     LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
     RIGHT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
     LEFT_MOTOR.setSpeed(TURN_SPEED);
@@ -82,21 +77,19 @@ public class UltrasonicLocalizer extends Thread {
     double alpha, beta;
 
     try {
-      Thread.sleep(1000);
+      Thread.sleep(2000);
     } catch (Exception e) {
 
     }
 
-    while (medianFilter() < 40) {
-      LEFT_MOTOR.forward();
-      RIGHT_MOTOR.backward();
-    }
-    Sound.beep();
-
-    while (medianFilter() > 30) {
+    while (medianFilter() > 25) {
       LEFT_MOTOR.backward();
       RIGHT_MOTOR.forward();
     }
+
+    LEFT_MOTOR.stop(true);
+    RIGHT_MOTOR.stop(false);
+
     Sound.beep();
 
     alpha = odometer.getXYT()[2];
@@ -107,10 +100,11 @@ public class UltrasonicLocalizer extends Thread {
     }
     Sound.beep();
 
-    while (medianFilter() > 30) {
+    while (medianFilter() > 25) {
       LEFT_MOTOR.forward();
       RIGHT_MOTOR.backward();
     }
+
     Sound.beep();
 
     beta = odometer.getXYT()[2];
@@ -126,32 +120,30 @@ public class UltrasonicLocalizer extends Thread {
     double alpha, beta;
 
     try {
-      Thread.sleep(1000);
+      Thread.sleep(2000);
     } catch (Exception e) {
 
     }
-
-    while (medianFilter() > 30) {
-      LEFT_MOTOR.backward();
-      RIGHT_MOTOR.forward();
-    }
-    Sound.beep();
 
     while (medianFilter() < 40) {
       LEFT_MOTOR.forward();
       RIGHT_MOTOR.backward();
     }
+
+    LEFT_MOTOR.stop(true);
+    RIGHT_MOTOR.stop(false);
+
     Sound.beep();
 
     alpha = odometer.getXYT()[2];
 
-    while (medianFilter() > 30) {
+    while (medianFilter() > 25) {
       LEFT_MOTOR.backward();
       RIGHT_MOTOR.forward();
     }
     Sound.beep();
 
-    while (medianFilter() < 40) {
+    while (medianFilter() < 35) {
       LEFT_MOTOR.backward();
       RIGHT_MOTOR.forward();
     }
@@ -208,18 +200,18 @@ public class UltrasonicLocalizer extends Thread {
    * @return the median of the five readings, sorted from small to large
    */
   private double medianFilter() {
-    // double[] arr = new double[5];
-    // for (int i = 0; i < 5; i++) {
-    this.usDistance.fetchSample(usData, 0);
-    return usData[0] * 100.0;
-    // }
-    // Arrays.sort(arr);
-    //
-    // if (arr[2] > 255) {
-    // return 255;
-    // }
-    //
-    // return arr[2];
+    double[] arr = new double[3];
+    for (int i = 0; i < 3; i++) {
+      this.usDistance.fetchSample(usData, 0);
+      return usData[0] * 100.0;
+    }
+    Arrays.sort(arr);
+
+    if (arr[1] > 255) {
+      return 255;
+    }
+
+    return arr[1];
   }
 
   /**

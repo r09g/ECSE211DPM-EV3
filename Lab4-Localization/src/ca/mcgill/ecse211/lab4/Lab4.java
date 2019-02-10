@@ -12,7 +12,7 @@ import ca.mcgill.ecse211.odometer.*;
 
 public class Lab4 {
 
-  public static final double WHEEL_RAD = 2.1;
+  public static final double WHEEL_RAD = 2.15;
   public static final double TRACK = 13.3;
   public static final double TILE = 30.48;
 
