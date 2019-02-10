@@ -87,7 +87,7 @@ public class UltrasonicLocalizer extends Thread {
 
     }
 
-    while (medianFilter() < 35) {
+    while (medianFilter() < 40) {
       LEFT_MOTOR.forward();
       RIGHT_MOTOR.backward();
     }
@@ -101,7 +101,7 @@ public class UltrasonicLocalizer extends Thread {
 
     alpha = odometer.getXYT()[2];
 
-    while (medianFilter() < 35) {
+    while (medianFilter() < 40) {
       LEFT_MOTOR.forward();
       RIGHT_MOTOR.backward();
     }
@@ -115,7 +115,7 @@ public class UltrasonicLocalizer extends Thread {
 
     beta = odometer.getXYT()[2];
 
-    return FEcorrect(alpha, beta);
+    return correctAngle(alpha, beta);
   }
 
   /**
@@ -123,70 +123,52 @@ public class UltrasonicLocalizer extends Thread {
    */
   private double risingEdge() {
 
-    double T1, T2, alpha, T3, T4, beta;
+    double alpha, beta;
 
-    while (true) {
-      distance = medianFilter();
+    try {
+      Thread.sleep(1000);
+    } catch (Exception e) {
 
-      // falling edge
-      if (distance > THRESHOLD - MARGIN) {
-        T1 = odometer.getXYT()[2];
-        while (true) {
-          distance = medianFilter();
-          if (distance > THRESHOLD + MARGIN) {
-            T2 = odometer.getXYT()[2];
-            break;
-          }
-        }
-        break;
-      }
     }
 
-    alpha = (T1 + T2) / 2;
-
-    // LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), true);
-    // RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_BUFFER), false);
-
-    while (true) {
-      distance = medianFilter();
-
-      // rising edge
-      if (distance < THRESHOLD + MARGIN) {
-        T3 = odometer.getXYT()[2];
-        while (true) {
-          distance = medianFilter();
-          if (distance < THRESHOLD - MARGIN) {
-            T4 = odometer.getXYT()[2];
-            break;
-          }
-        }
-        break;
-      }
+    while (medianFilter() > 30) {
+      LEFT_MOTOR.backward();
+      RIGHT_MOTOR.forward();
     }
+    Sound.beep();
 
-    beta = (T3 + T4) / 2;
+    while (medianFilter() < 40) {
+      LEFT_MOTOR.forward();
+      RIGHT_MOTOR.backward();
+    }
+    Sound.beep();
 
-    return REcorrect(alpha, beta);
+    alpha = odometer.getXYT()[2];
+
+    while (medianFilter() > 30) {
+      LEFT_MOTOR.backward();
+      RIGHT_MOTOR.forward();
+    }
+    Sound.beep();
+
+    while (medianFilter() < 40) {
+      LEFT_MOTOR.backward();
+      RIGHT_MOTOR.forward();
+    }
+    Sound.beep();
+
+    beta = odometer.getXYT()[2];
+
+    return correctAngle(alpha, beta);
 
   }
 
-  private double FEcorrect(double alpha, double beta) {
+  private double correctAngle(double alpha, double beta) {
     if (alpha > beta) {
       return 225.0 - (alpha + beta) / 2.0;
     } else {
       return 45.0 - (alpha + beta) / 2.0;
     }
-
-  }
-
-  private double REcorrect(double alpha, double beta) {
-    return 45.0 - (alpha + beta) / 2.0;
-
-    // if (Math.abs(alpha - beta) <= 180) {
-    // return 255.0 - (alpha + beta) / 2.0;
-    // } else {
-    // return 45.0 - (alpha + beta) / 2.0;
-    // }
 
   }
 
