@@ -25,7 +25,7 @@ import ca.mcgill.ecse211.odometer.*;
 public class Lab4 {
 
   // -----------------------------------------------------------------------------
-  // Public Constants
+  // Constants
   // -----------------------------------------------------------------------------
 
   /**
@@ -38,6 +38,32 @@ public class Lab4 {
    * right wheel
    */
   public static final double TRACK = 13.3;
+
+  /**
+   * A value for motor acceleration that prevents the wheels from slipping on the demo floor by
+   * accelerating and decelerating slowly
+   */
+  public static final int SMOOTH_ACCELERATION = 500;
+  
+  /**
+   * Specifies the speed of the left and right EV3 Large motors
+   */
+  public static final int SPEED = 100;
+
+  /**
+   * The heading/Theta value of the robot initially
+   */
+  public static final int INITIAL_ANGLE = 0;
+  
+  /**
+   * A revolution of half of a circle in degrees
+   */
+  public static final int HALF_CIRCLE = 180;
+  
+  /**
+   * A full revolution of a circle in degrees
+   */
+  public static final int FULL_CIRCLE = 360;
 
   /**
    * The instance of the left wheel large EV3 motor. The left motor is connected to port A on the

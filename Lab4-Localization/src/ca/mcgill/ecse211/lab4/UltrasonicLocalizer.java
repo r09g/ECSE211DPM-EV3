@@ -11,89 +11,205 @@ import static ca.mcgill.ecse211.lab4.Lab4.LEFT_MOTOR;
 import static ca.mcgill.ecse211.lab4.Lab4.RIGHT_MOTOR;
 import static ca.mcgill.ecse211.lab4.Lab4.TRACK;
 import static ca.mcgill.ecse211.lab4.Lab4.WHEEL_RAD;
+import static ca.mcgill.ecse211.lab4.Lab4.SPEED;
+import static ca.mcgill.ecse211.lab4.Lab4.INITIAL_ANGLE;
+import static ca.mcgill.ecse211.lab4.Lab4.HALF_CIRCLE;
+import static ca.mcgill.ecse211.lab4.Lab4.FULL_CIRCLE;
+import static ca.mcgill.ecse211.lab4.Lab4.SMOOTH_ACCELERATION;
 
+/**
+ * <p>
+ * This class implements localization with the ultrasonic sensor. This class extends the Thread
+ * class to allow simultaneous execution, so that other classes can work alongside this class.
+ * Helper methods are added at the end to make conversions easier.
+ * 
+ * <p>
+ * The robot is to be placed at the lower left tile of the demo platform, on the 45 degree line
+ * (from the top-right corner to the bottom-left corner). The robot localizes to a heading of 0
+ * degrees. The robot uses the convention that North = 0 degrees and clockwise turning = increase in
+ * heading degrees. There are two algorithms available, the falling edge and the rising edge, each
+ * works best in certain scenarios. From testing, we find that falling edge works best if robot is
+ * not facing the wall initially; and rising edge works best if robot is facing the wall initially.
+ * 
+ * @author Raymond Yang
+ * @author Erica De Petrillo
+ */
 public class UltrasonicLocalizer extends Thread {
 
-  private static final double THRESHOLD = 20;
-  private static final double MARGIN = 7.5;
-  private static final int TURN_SPEED = 100;
-  private static final int SMOOTH_ACCELERATION = 500;
-  private static final double TURN_CIRCLE = 360.0;
-  private static final int INITIAL_ANGLE = 0;
-  private static final int HALF_CIRCLE = 180;
-  private static final int FULL_CIRCLE = 360;
+  // -----------------------------------------------------------------------------
+  // Constants
+  // -----------------------------------------------------------------------------
 
+  /**
+   * The threshold distance (in cm) for detecting a falling edge
+   */
+  private static final double FE_THRESHOLD = 25;
+
+  /**
+   * This value (in cm) is used to ensure the robot continues to turn clockwise after first
+   * detection of falling edge, from left wall to bottom wall. In other words, this constant is used
+   * to force the robot out of the noise margin.
+   */
+  private static final double FE_CONTINUATION = 40;
+
+  /**
+   * The threshold distance (in cm) for detecting a rising edge
+   */
+  private static final double RE_THRESHOLD = 40;
+
+  /**
+   * This value (in cm) is used to ensure the robot continues to turn counter-clockwise after first
+   * detection of rising edge, from left wall to bottom wall. In other words, this constant is used
+   * to force the robot out of the noise margin.
+   */
+  private static final double RE_CONTINUATION = 25;
+
+  /**
+   * If button selected by user at start of program is LEFT, the corresponding localization mode is
+   * falling edge. Improves readability
+   */
   private static final int FALLING_EDGE = Button.ID_LEFT;
+
+  /**
+   * If button selected by user at start of program is RIGHT, the corresponding localization mode is
+   * rising edge. Improves readability
+   */
   private static final int RISING_EDGE = Button.ID_RIGHT;
 
+  // -----------------------------------------------------------------------------
+  // Class Variables
+  // -----------------------------------------------------------------------------
+
+  /**
+   * User's choice of localization mode. Records the button selected by the user, either LEFT or
+   * RIGHT. Note that the user is allowed to select other buttons, but LEFT and RIGHT are the only
+   * values that can reach this class.
+   */
   private int type;
 
+  /**
+   * The instance of the odometer. Provides access to data from odometer and access to setting
+   * odometer data values
+   */
   private Odometer odometer;
+
+  /**
+   * Array to store data retrieved from the odometer.
+   */
   private double[] odoData;
 
+  /**
+   * An object to read sensor data in a uniform way (Meter-Kilogram-Second units)
+   */
   private SampleProvider usDistance;
+
+  /**
+   * Buffer to store data read from the ultrasonic sensor
+   */
   private float[] usData;
 
-  public UltrasonicLocalizer(int buttonChoice, SampleProvider usDistance, float[] usData, Odometer odometer) {
+  // -----------------------------------------------------------------------------
+  // Constructor
+  // -----------------------------------------------------------------------------
+
+  /**
+   * Constructor for this class. Initializes class variables with existing instances and sets the
+   * motor speed and acceleration.
+   * 
+   * @param buttonChoice - The button selected by the user to choose mode of localization
+   * @param usDistance - Data reader to read ultrasonic sensor data in uniform way
+   * @param usData - Buffer to store data from ultrasonic sensor
+   * @param odometer - An existing instance of the odometer
+   */
+  public UltrasonicLocalizer(int buttonChoice, SampleProvider usDistance, float[] usData,
+      Odometer odometer) {
+    // initializes variables with existing instances
     this.odometer = odometer;
     this.usData = usData;
     this.usDistance = usDistance;
     this.type = buttonChoice;
-    LEFT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
-    RIGHT_MOTOR.setAcceleration(SMOOTH_ACCELERATION);
-    LEFT_MOTOR.setSpeed(TURN_SPEED);
-    RIGHT_MOTOR.setSpeed(TURN_SPEED);
+    // specifies left and right motor behaviours
+    setAcceleration(SMOOTH_ACCELERATION);
+    setSpeed(SPEED);
   }
 
+  // -----------------------------------------------------------------------------
+  // Run Method
+  // -----------------------------------------------------------------------------
+
+  /**
+   * The {@code run()} method required in a Thread class. In this class, the corresponding method of
+   * the mode of localization, selected by the user, is called. After localization finishes, the
+   * robot turns to face 0 degrees. Refer to conventions specified in the documentation for the
+   * UltrasonicLocalizer class.
+   */
   public void run() {
 
+    // Stores the change in theta value required for localization
     double dTheta = 0;
 
+    // Determines which mode of localization is to be executed
     if (type == FALLING_EDGE) {
-      // falling edge
+      // Falling edge
       dTheta = fallingEdge();
     } else if (type == RISING_EDGE) {
-      // rising edge
+      // Rising edge
       dTheta = risingEdge();
     }
 
-    LEFT_MOTOR.stop(true);
-    RIGHT_MOTOR.stop(false);
+    // Angle collection is complete, no need to rotate on-the-spot anymore
+    stopMotors();
 
+    // Update odometer theta values to values that are with respect to the convention (North = 0
+    // degrees)
     odometer.setTheta(odometer.getXYT()[2] + dTheta);
 
+    // Signal completion of heading angle update
     Sound.beep();
 
+    // Turn to a heading of 0 degrees
     turnTo(0);
 
   }
 
+  // -----------------------------------------------------------------------------
+  // Private Methods
+  // -----------------------------------------------------------------------------
+
   /**
-   * Falling Edge
+   * Method for falling edge implementation. The method works best when robot is initially placed to
+   * not face the wall. The robot first turns left to record a falling edge for the left wall, then
+   * switches direction and turns to record another falling edge for the bottom wall. The
+   * computation for the correction of the current heading angle is computed in another method but
+   * called in this method.
+   * 
+   * @return the correction needed to be applied to the current heading for localization
    */
   private double fallingEdge() {
 
-    double alpha, beta;
+    // Angle corresponding to first falling edge
+    double alpha;
 
-    try {
-      Thread.sleep(2000);
-    } catch (Exception e) {
+    // Angle corresponding to second falling edge
+    double beta;
 
+    // Turn left until first falling edge detected
+    while (medianFilter() > FE_THRESHOLD) {
+      turnLeft();
     }
 
-    while (medianFilter() > 25) {
-      LEFT_MOTOR.backward();
-      RIGHT_MOTOR.forward();
-    }
-
-    LEFT_MOTOR.stop(true);
-    RIGHT_MOTOR.stop(false);
-
+    // Signal detection of falling edge for left wall
     Sound.beep();
 
+    // Stops the robot to change turning direction
+    stopMotors();
+
+    // Record angle for left wall. The angle is stored in index = 2 slot.
     alpha = odometer.getXYT()[2];
 
-    while (medianFilter() < 40) {
+    // Turns the robot right and forces it out of the noise margin to avoid incorrect detection of
+    // second falling edge
+    while (medianFilter() < FE_CONTINUATION) {
       LEFT_MOTOR.forward();
       RIGHT_MOTOR.backward();
     }
@@ -129,22 +245,19 @@ public class UltrasonicLocalizer extends Thread {
       RIGHT_MOTOR.backward();
     }
 
-    LEFT_MOTOR.stop(true);
-    RIGHT_MOTOR.stop(false);
+    stopMotors();
 
     Sound.beep();
 
     alpha = odometer.getXYT()[2];
 
     while (medianFilter() > 25) {
-      LEFT_MOTOR.backward();
-      RIGHT_MOTOR.forward();
+      turnLeft();
     }
     Sound.beep();
 
-    while (medianFilter() < 35) {
-      LEFT_MOTOR.backward();
-      RIGHT_MOTOR.forward();
+    while (medianFilter() < 40) {
+      turnLeft();
     }
     Sound.beep();
 
@@ -211,6 +324,49 @@ public class UltrasonicLocalizer extends Thread {
     }
 
     return arr[1];
+  }
+
+  /**
+   * Sets the speed of both the left and right EV3 large motors of the robot.
+   * 
+   * @param speed - The speed to be set
+   */
+  private void setSpeed(int speed) {
+    LEFT_MOTOR.setSpeed(speed);
+    RIGHT_MOTOR.setSpeed(speed);
+  }
+
+  /**
+   * Sets both the left and right EV3 large motor accelerations. Accelerations are set to smoothen
+   * the start and stop motions of the robot, which reduces the wheel slippage that commonly leads
+   * to inaccuracies in the odometer readings
+   * 
+   * @param acc - The motor acceleration to be set
+   */
+  private void setAcceleration(int acc) {
+    LEFT_MOTOR.setAcceleration(acc);
+    RIGHT_MOTOR.setAcceleration(acc);
+  }
+
+  /**
+   * Stops the left and right motors simultaneously. The first call to stop the left motor is
+   * non-blocking and the second call to stop the right motor is blocking. This is to ensure that
+   * both motors stop as synchronized as possible.
+   */
+  private void stopMotors() {
+    // call will return immediately
+    LEFT_MOTOR.stop(true);
+    // will only return control after stopping is completed
+    RIGHT_MOTOR.stop(false);
+  }
+
+  /**
+   * Turns robot left. Turns left EV3 large motor backwards while turning the right EV3 large motor
+   * forwards.
+   */
+  private void turnLeft() {
+    LEFT_MOTOR.backward();
+    RIGHT_MOTOR.forward();
   }
 
   /**

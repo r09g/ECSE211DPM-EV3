@@ -1,13 +1,20 @@
 package ca.mcgill.ecse211.lab4;
 
+//non-static imports
+import ca.mcgill.ecse211.odometer.Odometer;
+import lejos.hardware.Sound;
+import lejos.robotics.SampleProvider;
+// static imports
 import static ca.mcgill.ecse211.lab4.Lab4.LEFT_MOTOR;
 import static ca.mcgill.ecse211.lab4.Lab4.RIGHT_MOTOR;
 import static ca.mcgill.ecse211.lab4.Lab4.TRACK;
 import static ca.mcgill.ecse211.lab4.Lab4.WHEEL_RAD;
-import ca.mcgill.ecse211.odometer.Odometer;
-import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import lejos.hardware.Sound;
-import lejos.robotics.SampleProvider;
+import static ca.mcgill.ecse211.lab4.Lab4.SPEED;
+import static ca.mcgill.ecse211.lab4.Lab4.INITIAL_ANGLE;
+import static ca.mcgill.ecse211.lab4.Lab4.HALF_CIRCLE;
+import static ca.mcgill.ecse211.lab4.Lab4.FULL_CIRCLE;
+import static ca.mcgill.ecse211.lab4.Lab4.SMOOTH_ACCELERATION;
+
 
 public class LightLocalizer extends Thread {
 
@@ -16,15 +23,9 @@ public class LightLocalizer extends Thread {
   private SampleProvider lightColor;
   private float filterSum;
 
-  private static final int SPEED = 150; // might need to change
   private static final double THRESHOLD = 0.75; // threshold for finding gridlines
-  private static final double TURN_CIRCLE = 360.0;
   private static final double ANGLE_TO_ORIGIN = 45.0;
-  private static final int SMOOTH_ACCELERATION = 500;
   private static final double SENSOR_DIST = 13; // distance from sensor to center of mass of robot
-  private static final int INITIAL_ANGLE = 0;
-  private static final int HALF_CIRCLE = 180;
-  private static final int FULL_CIRCLE = 360;
   private static final double TO_DEG = 180.0 / Math.PI;
   private static final double TO_RAD = Math.PI / 180.0;
   private static final int Q1Q4COR = 90;
@@ -124,8 +125,8 @@ public class LightLocalizer extends Thread {
 
   private void find4Points() {
 
-    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, TURN_CIRCLE + 7), true);
-    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, TURN_CIRCLE + 7), true);
+    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, FULL_CIRCLE + 7), true);
+    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, FULL_CIRCLE + 7), true);
     // robot does a 360
     left_x = recordAngle();
     up_y = recordAngle();
