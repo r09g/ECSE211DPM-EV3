@@ -29,10 +29,21 @@ public class Lab4 {
   // -----------------------------------------------------------------------------
 
   /**
+   * A constant factor that can be applied to convert angle units in radians to degrees
+   */
+  public static final double TO_DEG = 180.0 / Math.PI;
+  
+  /**
+   * A constant factor that can be applied to convert angular units in degrees to
+   * radians
+   */
+  public static final double TO_RAD = Math.PI / 180.0;
+  
+  /**
    * The radius (in cm) of the left/right wheels of the EV3 robot.
    */
   public static final double WHEEL_RAD = 2.15;
-
+  
   /**
    * The width (in cm) of the robot measured from the center of the left wheel to the center of the
    * right wheel

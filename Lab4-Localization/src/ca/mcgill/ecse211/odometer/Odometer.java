@@ -12,6 +12,9 @@ package ca.mcgill.ecse211.odometer;
 
 // non-static import
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+// static import
+import static ca.mcgill.ecse211.lab4.Lab4.TO_DEG;
+import static ca.mcgill.ecse211.lab4.Lab4.TO_RAD;
 
 /**
  * This class describes the odometer function of the robot. The odometer records
@@ -34,18 +37,6 @@ public class Odometer extends OdometerData implements Runnable {
 	 * Odometer update period (in ms) 
 	 */
 	private static final long ODOMETER_PERIOD = 25;
-
-	/**
-	 * A constant factor that can be applied to convert angular units in degrees to
-	 * radians
-	 */
-	private static final double TO_RAD = Math.PI / 180.0;
-
-	/**
-	 * A constant factor that can be applied to convert angular units in radians to
-	 * degrees
-	 */
-	private static final double TO_DEG = 180.0 / Math.PI;
 
 	// -----------------------------------------------------------------------------
 	// Class Variables
