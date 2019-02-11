@@ -6,7 +6,7 @@ ECSE 211 Design Principles and Methods.
 - Lab 2: Odometry
 - Lab 3: Navigation
 - Lab 4: Localization
-- Lab 5:
+- Lab 5: Search & Localization
 
 ## Notes ##
 __Battery Pack__
