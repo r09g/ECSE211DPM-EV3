@@ -47,7 +47,7 @@ public class UltrasonicLocalizer extends Thread {
 
   /**
    * This value (in cm) is used to ensure the robot continues to turn clockwise after first
-   * detection of falling edge, from left wall to bottom wall. In other words, this constant is used
+   * detection of falling edge, from left wall to back wall. In other words, this constant is used
    * to force the robot out of the noise margin.
    */
   private static final double FE_CONTINUATION = 40;
@@ -59,8 +59,8 @@ public class UltrasonicLocalizer extends Thread {
 
   /**
    * This value (in cm) is used to ensure the robot continues to turn counter-clockwise after first
-   * detection of rising edge, from left wall to bottom wall. In other words, this constant is used
-   * to force the robot out of the noise margin.
+   * detection of rising edge, from left wall to back wall. In other words, this constant is used to
+   * force the robot out of the noise margin.
    */
   private static final double RE_CONTINUATION = 25;
 
@@ -75,6 +75,37 @@ public class UltrasonicLocalizer extends Thread {
    * rising edge. Improves readability
    */
   private static final int RISING_EDGE = Button.ID_RIGHT;
+
+  /**
+   * The target angle for rising edge using our convention of North = 0 degrees and clockwise
+   * turning = increase in Theta. This is used to correct the Odometer Theta value in order to
+   * localize the robot.
+   */
+  private static final double RE_ANGLE = 225.0;
+
+  /**
+   * The target angle for falling edge using our convention of North = 0 degrees and clockwise
+   * turning = increase in Theta. This is used to correct the Odometer Theta value in order to
+   * localize the robot.
+   */
+  private static final double FE_ANGLE = 45.0;
+
+  /**
+   * Factor to amplify ultrasonic sensor readings, increases sensitivity of the ultrasonic sensor
+   */
+  private static final double AMP_FACTOR = 100.0;
+
+  /**
+   * Number of readings to be taken for median filter of the ultrasonic sensor. Used to filter out
+   * extreme values and unwanted spikes
+   */
+  private static final int NUM_READINGS = 3;
+
+  /**
+   * The max value of the ultrasonic sensor. Used to filter out unrealistic values returned by the
+   * ultrasonic sensor
+   */
+  private static final int MAX_READING = 255;
 
   // -----------------------------------------------------------------------------
   // Class Variables
@@ -177,11 +208,17 @@ public class UltrasonicLocalizer extends Thread {
   // -----------------------------------------------------------------------------
 
   /**
-   * Method for falling edge implementation. The method works best when robot is initially placed to
-   * not face the wall. The robot first turns left to record a falling edge for the left wall, then
-   * switches direction and turns to record another falling edge for the bottom wall. The
-   * computation for the correction of the current heading angle is computed in another method but
-   * called in this method.
+   * <p>
+   * Method for falling edge implementation. The robot first turns left to record a falling edge for
+   * the left wall, then switches direction and turns to record another falling edge for the back
+   * wall. The computation for the correction of the current heading angle is computed in another
+   * method but called in this method. The robot will beep when executing this method to signal
+   * stages.
+   * 
+   * <p>
+   * The method works best when robot is initially placed to not face the wall. The 45 degree line
+   * can be used to decide whether falling edge or rising edge is best. For angles in the range
+   * 315~360, and 0~135, falling edge works best.
    * 
    * @return the correction needed to be applied to the current heading for localization
    */
@@ -198,7 +235,7 @@ public class UltrasonicLocalizer extends Thread {
       turnLeft();
     }
 
-    // Signal detection of falling edge for left wall
+    // Beep once to signal detection of falling edge for left wall
     Sound.beep();
 
     // Stops the robot to change turning direction
@@ -210,68 +247,112 @@ public class UltrasonicLocalizer extends Thread {
     // Turns the robot right and forces it out of the noise margin to avoid incorrect detection of
     // second falling edge
     while (medianFilter() < FE_CONTINUATION) {
-      LEFT_MOTOR.forward();
-      RIGHT_MOTOR.backward();
-    }
-    Sound.beep();
-
-    while (medianFilter() > 25) {
-      LEFT_MOTOR.forward();
-      RIGHT_MOTOR.backward();
+      turnRight();
     }
 
+    // Beep once to signal exiting of noise margin
     Sound.beep();
 
+    // Keeps the robot turning right until second falling edge is detected.
+    // This is the falling edge for the back wall
+    while (medianFilter() > FE_THRESHOLD) {
+      turnRight();
+    }
+
+    // Beep once to signal detection
+    Sound.beep();
+
+    // Record angle for back wall. The angle is stored in index = 2 slot.
     beta = odometer.getXYT()[2];
 
+    // compute correction angle and return
     return correctAngle(alpha, beta);
   }
 
   /**
+   * <p>
+   * Method for rising edge implementation. The robot first turns right to record a rising edge for
+   * the left wall, then switches direction and turns to record another falling edge for the back
+   * wall. The computation for the correction of the current heading angle is computed in another
+   * method but called in this method. The robot will beep when executing this method to signal
+   * stages.
    * 
+   * <p>
+   * The method works best when robot is initially placed to face the wall. The 45 degree line can
+   * be used to decide whether falling edge or rising edge is best. For angles in the range 135~315,
+   * rising edge works best.
+   * 
+   * @return the correction needed to be applied to the current heading for localization
    */
   private double risingEdge() {
 
-    double alpha, beta;
+    // Angle corresponding to first falling edge
+    double alpha;
 
-    try {
-      Thread.sleep(2000);
-    } catch (Exception e) {
+    // Angle corresponding to second falling edge
+    double beta;
 
+    // Turn right until first rising edge detected. Rising edge for left wall.
+    while (medianFilter() < RE_THRESHOLD) {
+      turnRight();
     }
 
-    while (medianFilter() < 40) {
-      LEFT_MOTOR.forward();
-      RIGHT_MOTOR.backward();
-    }
+    // Beep once to signal detection
+    Sound.beep();
 
+    // Stops the robot to change turning direction
     stopMotors();
 
-    Sound.beep();
-
+    // Record angle for left wall
     alpha = odometer.getXYT()[2];
 
-    while (medianFilter() > 25) {
+    // Turns the robot left and forces it out of the noise margin to avoid incorrect detection of
+    // second rising edge
+    while (medianFilter() > RE_CONTINUATION) {
       turnLeft();
     }
+
+    // Beep once to signal exiting of noise margin
     Sound.beep();
 
-    while (medianFilter() < 40) {
+    // Turn left until second rising edge detected. Rising edge for back wall.
+    while (medianFilter() < RE_THRESHOLD) {
       turnLeft();
     }
+
+    // Beep once to signal detection of second rising edge
     Sound.beep();
 
+    // Record angle for back wall
     beta = odometer.getXYT()[2];
 
+    // compute correction angle and return
     return correctAngle(alpha, beta);
 
   }
 
+  /**
+   * <p>
+   * A helper method to compute the correction angle needed for the Odometer's Theta value. Corrects
+   * the robot's heading to a value that references North as 0 degrees.
+   * 
+   * <p>
+   * If alpha, the first angle detected, is greater than beta, the second angle detected, then the
+   * robot is executing rising edge. For the opposite case, the robot is executing falling edge. For
+   * falling edge, the average of the two angles is suppose to be 45 degrees with respect to our
+   * convention (North = 0 degrees). For rising edge, the average of the two angles is suppose to be
+   * 225 degrees with respect to our convention.
+   * 
+   * @param alpha - The first angle recorded
+   * @param beta - The second angle recorded
+   * @return The correction to Odometer's Theta value needed to localize the robot's heading
+   */
   private double correctAngle(double alpha, double beta) {
+    // The divisor 2.0 is used to take the average
     if (alpha > beta) {
-      return 225.0 - (alpha + beta) / 2.0;
+      return RE_ANGLE - (alpha + beta) / 2.0;
     } else {
-      return 45.0 - (alpha + beta) / 2.0;
+      return FE_ANGLE - (alpha + beta) / 2.0;
     }
 
   }
@@ -289,22 +370,19 @@ public class UltrasonicLocalizer extends Thread {
     double minTheta = ((Theta - odometer.getXYT()[2]) + FULL_CIRCLE) % FULL_CIRCLE;
 
     if (minTheta > INITIAL_ANGLE && minTheta <= HALF_CIRCLE) {
-      // angle is already minimum angle, robot should turn clockwise
-      RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-      LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+      // angle is already minimum angle, robot should turn clockwise (right)
+      turnRight(minTheta);
     } else if (minTheta > HALF_CIRCLE && minTheta < FULL_CIRCLE) {
-      // angle is not minimum angle, robot should turn counter-clockwise to the
+      // angle is not minimum angle, robot should turn counter-clockwise (left) to the
       // complementary angle of a full circle 360 degrees
       minTheta = FULL_CIRCLE - minTheta;
-      RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, minTheta), true);
-      LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, minTheta), false);
+      turnLeft(minTheta);
     }
-
   }
 
 
   /**
-   * This is a median filter. The filter takes 5 consecutive readings from the ultrasonic sensor,
+   * This is a median filter. The filter takes 3 consecutive readings from the ultrasonic sensor,
    * amplifies them to increase sensor sensitivity, sorts them, and picks the median to minimize the
    * influence of false negatives and false positives in sensor readings, if any. The sensor is very
    * likely to report false negatives.
@@ -312,18 +390,29 @@ public class UltrasonicLocalizer extends Thread {
    * @return the median of the five readings, sorted from small to large
    */
   private double medianFilter() {
-    double[] arr = new double[3];
-    for (int i = 0; i < 3; i++) {
+
+    // Buffer for median filter
+    double[] arr = new double[NUM_READINGS];
+
+    // Take 3 readings, each amplified by a factor of 100.0
+    for (int i = 0; i < NUM_READINGS; i++) {
+      // place reading into buffer
       this.usDistance.fetchSample(usData, 0);
-      arr[i] = usData[0] * 100.0;
+      // Amplify reading and store in buffer for median filter
+      arr[i] = usData[0] * AMP_FACTOR;
     }
+
+    // Sort array in increasing size to find median
+    // The item in the center is the median
     Arrays.sort(arr);
 
-    if (arr[1] > 255) {
-      return 255;
+    // If median is greater than maximum distance value
+    if (arr[NUM_READINGS / 2] > MAX_READING) {
+      return MAX_READING;
     }
 
-    return arr[1];
+    // return median
+    return arr[NUM_READINGS / 2];
   }
 
   /**
@@ -367,6 +456,39 @@ public class UltrasonicLocalizer extends Thread {
   private void turnLeft() {
     LEFT_MOTOR.backward();
     RIGHT_MOTOR.forward();
+  }
+
+  /**
+   * Turns the robot left for a fixed angle. Turns left EV3 large motor backwards while turning the
+   * right EV3 large motor forwards. First call to right motor is non-blocking and second call to
+   * left motor is blocking to ensure synchronized movement of the two motors.
+   * 
+   * @param angle - The angle in degrees to be turned
+   */
+  private void turnLeft(double angle) {
+    RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, angle), true);
+    LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, angle), false);
+  }
+
+  /**
+   * Turns robot right. Turns left EV3 large motor forwards while turning the right EV3 large motor
+   * backwards.
+   */
+  private void turnRight() {
+    LEFT_MOTOR.forward();
+    RIGHT_MOTOR.backward();
+  }
+
+  /**
+   * Turns the robot right for a fixed angle. Turns left EV3 large motor forwards while turning the
+   * right EV3 large motor backwards. First call to right motor is non-blocking and second call to
+   * left motor is blocking to ensure synchronized movement of the two motors.
+   * 
+   * @param angle - The angle in degrees to be turned
+   */
+  private void turnRight(double angle) {
+    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, angle), true);
+    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, angle), false);
   }
 
   /**
