@@ -34,9 +34,8 @@ public class UltrasonicLocalizer extends Thread {
   private SampleProvider usDistance;
   private float[] usData;
 
-  public UltrasonicLocalizer(int buttonChoice, SampleProvider usDistance, float[] usData)
-      throws OdometerExceptions {
-    this.odometer = Odometer.getOdometer();
+  public UltrasonicLocalizer(int buttonChoice, SampleProvider usDistance, float[] usData, Odometer odometer) {
+    this.odometer = odometer;
     this.usData = usData;
     this.usDistance = usDistance;
     this.type = buttonChoice;
@@ -203,7 +202,7 @@ public class UltrasonicLocalizer extends Thread {
     double[] arr = new double[3];
     for (int i = 0; i < 3; i++) {
       this.usDistance.fetchSample(usData, 0);
-      return usData[0] * 100.0;
+      arr[i] = usData[0] * 100.0;
     }
     Arrays.sort(arr);
 

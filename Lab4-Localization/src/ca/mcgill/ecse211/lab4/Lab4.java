@@ -64,7 +64,7 @@ public class Lab4 {
     if (buttonChoice == Button.ID_LEFT || buttonChoice == Button.ID_RIGHT) {
       // Falling Edge or Rising Edge
 
-      UltrasonicLocalizer usloc = new UltrasonicLocalizer(buttonChoice, usDistance, usData);
+      UltrasonicLocalizer usloc = new UltrasonicLocalizer(buttonChoice, usDistance, usData, odometer);
       
       Thread odoThread = new Thread(odometer);
       Thread odoDisplayThread = new Thread(odometryDisplay);
@@ -77,7 +77,7 @@ public class Lab4 {
       if (Button.waitForAnyPress() == Button.ID_ESCAPE) { // wait for user confirmation
         System.exit(0);
       } else {
-        LightLocalizer lightloc = new LightLocalizer(cs, csData);
+        LightLocalizer lightloc = new LightLocalizer(cs, csData, odometer);
         Thread lightlocThread = new Thread(lightloc);
         lightlocThread.start();
       }
