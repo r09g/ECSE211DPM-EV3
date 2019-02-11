@@ -78,6 +78,50 @@ public class LightLocalizer extends Thread {
    */
   private static final int CENTER = 0;
 
+  /**
+   * Factor to scale the forward movement when approaching the origin. Ensures that the robot stops
+   * before the origin
+   */
+  private static final double DISTANCE_FACTOR = 1 / 3;
+
+  /**
+   * The angle (in degrees) corresponding to the North using our convention
+   */
+  private static final int NORTH = 0;
+
+  /**
+   * Adjustment needed to turn robot to face North. This constant exists because EV3 turns a smaller
+   * angle than expected in reality.
+   */
+  private static final int TURN_ADJUSTMENT = 6;
+
+  /**
+   * This adjustment is very similar to the TURN_ADJUSTMENT but this is specially for turning a full
+   * revolution of 360 degrees.
+   */
+  private static final int CIRCLE_ADJUSTMENT = 7;
+
+  /**
+   * Factor to amplify light sensor readings, increases sensitivity of the light sensor
+   */
+  private static final double AMP_FACTOR = 100.0;
+
+  /**
+   * Number of readings to be taken for mean filter (MF) of the light sensor.
+   */
+  private static final int MF_READINGS = 5;
+
+  /**
+   * Number of readings to be taken when computing the initial reading (IR) of the light sensor
+   */
+  private static final int IR_READINGS = 100;
+
+  /**
+   * The time for thread to sleep. To wait for turning motion to complete after detecting all 4 grid
+   * lines, when detecting grid lines.
+   */
+  private static final int IDLE_TIME = 50;
+
   // -----------------------------------------------------------------------------
   // Class Variables
   // -----------------------------------------------------------------------------
@@ -153,108 +197,149 @@ public class LightLocalizer extends Thread {
     this.down_y = 0;
     // Set motor behaviour
     setAcceleration(SMOOTH_ACCELERATION);
-
+    setSpeed(SPEED);
+    // Reset motor TachoCount
     LEFT_MOTOR.resetTachoCount();
     RIGHT_MOTOR.resetTachoCount();
   }
-  // assuming zero orientation is robot facing north
 
+  // -----------------------------------------------------------------------------
+  // Run Method
+  // -----------------------------------------------------------------------------
+
+  /**
+   * The {@code run()} method required in a Thread class. In this class, a set of movements is
+   * specified to localize the robot's position.
+   */
   public void run() {
 
+    // Record reading for background color
     std = initialReading();
 
-    LEFT_MOTOR.setSpeed(SPEED);
-    RIGHT_MOTOR.setSpeed(SPEED);
+    // Record the initial tacho count
+    int startTacho = recordTachoCount();
 
-    int startTacho = (LEFT_MOTOR.getTachoCount() + RIGHT_MOTOR.getTachoCount()) / 2;
-
+    // Keep sampling until a grid line is detected
     while (true) {
+      // a mean filter is used to smooth out readings
       intensity = meanFilter();
+      // detection of grid line
       if ((intensity / std) < THRESHOLD) {
+        // Beep once for detection
         Sound.beep();
         break;
       }
-      LEFT_MOTOR.forward();
-      RIGHT_MOTOR.forward();
+      // Continue to move robot forwards if no grid line detected
+      moveForward();
     }
 
-    LEFT_MOTOR.stop(true);
-    RIGHT_MOTOR.stop(false);
+    // Stop if a grid line is detected
+    stopMotors();
 
-    int endTacho = (LEFT_MOTOR.getTachoCount() + RIGHT_MOTOR.getTachoCount()) / 2;
+    // Record the tacho count
+    int endTacho = recordTachoCount();
 
+    // Compute the distancee (in degrees of wheel rotation) from the starting point to the grid line
+    // detection
     int distanceToGrid = endTacho - startTacho;
 
-    // reverse back to starting point
-    LEFT_MOTOR.rotate((int) (-distanceToGrid), true);
-    RIGHT_MOTOR.rotate((int) (-distanceToGrid), false);
+    // Reverse back to starting point
+    moveBackward(distanceToGrid);
 
-    // face origin
-    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, ANGLE_TO_ORIGIN), true);
-    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, ANGLE_TO_ORIGIN), false);
+    // Face origin
+    turnRight(ANGLE_TO_ORIGIN);
 
-    LEFT_MOTOR.rotate((int) ((distanceToGrid - SENSOR_DIST) / 3), true);
-    RIGHT_MOTOR.rotate((int) ((distanceToGrid - SENSOR_DIST) / 3), false);
+    // Move closer to origin but stop before reaching the origin
+    moveForward((distanceToGrid - SENSOR_DIST) * DISTANCE_FACTOR);
 
-    // turn to face straight
-    LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, ANGLE_TO_ORIGIN), true);
-    RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, ANGLE_TO_ORIGIN), false);
+    // Turn to face straight
+    turnLeft(ANGLE_TO_ORIGIN);
 
-    odometer.setTheta(0);
+    // Robot should be facing north. Overwrite Theta to ensure accuracy.
+    odometer.setTheta(NORTH);
 
+    // Find four angles when robot intersects four grid lines
     find4Points();
 
+    // Compute the current y position using trignometry
     double xTheta = Math.abs(left_x - right_x) / 2.0;
     double dy = Math.cos(xTheta * TO_RAD) * SENSOR_DIST;
 
+    // Update the Y value to reference the origin
     odometer.setY(-dy);
 
+    // Compute angle used to determine the x position
     double yTheta = Math.abs(down_y - up_y) / 2.0;
 
+    // Hack to ensure correct computation
+    // Needed when robot is really close to y axis
+    // Although angle is less than 180 (average less than 90) but Odometer may be inaccurate and
+    // measure angle greater than 180.
     if (yTheta > 90) {
+      // Take the complementary angle
       yTheta = 180 - yTheta;
     }
 
+    // Compute the current x position
     double dx = Math.cos(yTheta * TO_RAD) * SENSOR_DIST;
 
+    // Update the X value to reference the origin
     odometer.setX(-dx);
 
+    // Travel to the origin
     travelTo(0, 0);
-    turnTo(6);
 
-    // LEFT_MOTOR.rotate(-convertDistance(WHEEL_RAD, SENSOR_DIST), true);
-    // RIGHT_MOTOR.rotate(-convertDistance(WHEEL_RAD, SENSOR_DIST), false);
+    // Turn to face north
+    // Adjustment needed since robot turns less in reality
+    turnTo(TURN_ADJUSTMENT);
 
   }
 
+  /**
+   * Turns the robot 360 degrees to find a total of 4 grid lines, recording the angle at which each
+   * grid line is detected. The angles will be used to compute the distances from the origin.
+   */
   private void find4Points() {
 
-    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, FULL_CIRCLE + 7), true);
-    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, FULL_CIRCLE + 7), true);
-    // robot does a 360
+    // Rotate 360 degrees clockwise, both non-blocking to allow detection of grid line while turning
+    LEFT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, FULL_CIRCLE + CIRCLE_ADJUSTMENT), true);
+    RIGHT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, FULL_CIRCLE + CIRCLE_ADJUSTMENT), true);
+
+    // Record four grid lines in turn
     left_x = recordAngle();
     up_y = recordAngle();
     right_x = recordAngle();
     down_y = recordAngle();
 
+    // Wait for robot to complete turn before proceeding
     while (LEFT_MOTOR.isMoving() || RIGHT_MOTOR.isMoving()) {
       // wait
       try {
-        Thread.sleep(50);
+        Thread.sleep(IDLE_TIME);
       } catch (Exception e) {
         // nothing
       }
     }
   }
 
+  /**
+   * Records the current angle (in degrees) when a grid line is detected
+   * 
+   * @return The angle if detection is successful and -1 if unsuccessful
+   */
   private double recordAngle() {
     while (LEFT_MOTOR.isMoving() || RIGHT_MOTOR.isMoving()) {
+      // Take data from light sensor
       intensity = meanFilter();
-      if ((intensity / std) < THRESHOLD) { // detects another gridline
+      // Determine if grid line is passed
+      if ((intensity / std) < THRESHOLD) {
+        // Beep once to signal detection
         Sound.beep();
+        // Return the current angle
         return odometer.getXYT()[2];
       }
     }
+    // Case where robot finishes the turn but no grid line is detected
     return -1;
   }
 
@@ -265,14 +350,14 @@ public class LightLocalizer extends Thread {
    * @return
    */
   private double initialReading() {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < IR_READINGS; i++) {
       // acquires sample data
       lightColor.fetchSample(lightData, 0);
       // amplifies and sums the sample data
-      std += lightData[0] * 100.0;
+      std += lightData[0] * AMP_FACTOR;
     }
     // take average of the standard
-    return std /= 100.0;
+    return std /= IR_READINGS;
   }
 
   /**
@@ -283,32 +368,52 @@ public class LightLocalizer extends Thread {
    * @return returns the average of the amplified reading
    */
   private double meanFilter() {
+
     double filterSum = 0;
     // take 5 readings
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < MF_READINGS; i++) {
 
       // acquire sample data and read into array with no offset
       lightColor.fetchSample(lightData, 0);
 
       // amplify signal for increased sensitivity
-      filterSum += lightData[0] * 100;
+      filterSum += lightData[0] * AMP_FACTOR;
 
     }
 
     // return an amplified average
-    return filterSum / 5.0;
+    return filterSum / MF_READINGS;
 
   }
 
+  /**
+   * <p>
+   * Controls the robot to travel to the coordinate (x,y) with the robot's initial starting location
+   * as the origin. This is done by retrieving current position data of the robot and calculating
+   * the new heading the robot needs to have, as well as the distance the robot needs to travel to
+   * reach its next destination. A minimum angle approach is taken, meaning that the robot will turn
+   * the smallest angle possible to adjust its heading.
+   * 
+   * <p>
+   * There is a logic implemented in this method to determine the angle the robot needs to turn,
+   * clockwise, to reach its new heading. This logic is necessary largely due to the values returned
+   * by arctan function. The arctan function only returns values ranging from -pi/2 to pi/2, and
+   * real values can be + or - pi from the returned value.
+   * 
+   * @param x - the x value of the destination with respect to the origin (in cm)
+   * @param y - the y value of the destination with respect to the origin (in cm)
+   */
   private void travelTo(double x, double y) {
 
-    double[] position = odometer.getXYT(); // get current position data from odometer
+    // get current position data from odometer
+    double[] position = odometer.getXYT();
 
     // position[0] = x, position[1] = y, position[2] = theta
     double dx = x - position[0]; // displacement in x
     double dy = y - position[1]; // displacment in y
     double ds = Math.hypot(dx, dy);
 
+    // compute heading (theta) using arctan of y and x positions
     double dTheta = Math.atan(dy / dx) * TO_DEG;
 
     if (dTheta >= CENTER && dx >= CENTER) {
@@ -325,10 +430,11 @@ public class LightLocalizer extends Thread {
       dTheta = Q2Q3COR - dTheta; // absolute angle
     }
 
-    turnTo(dTheta); // robot turns at minimum angle
+    // robot turns at minimum angle
+    turnTo(dTheta);
 
-    RIGHT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), true);
-    LEFT_MOTOR.rotate(convertDistance(WHEEL_RAD, ds), false);
+    // move robot to destination
+    moveForward(ds);
 
   }
 
@@ -390,15 +496,6 @@ public class LightLocalizer extends Thread {
   }
 
   /**
-   * Turns robot left. Turns left EV3 large motor backwards while turning the right EV3 large motor
-   * forwards.
-   */
-  private void turnLeft() {
-    LEFT_MOTOR.backward();
-    RIGHT_MOTOR.forward();
-  }
-
-  /**
    * Turns the robot left for a fixed angle. Turns left EV3 large motor backwards while turning the
    * right EV3 large motor forwards. First call to right motor is non-blocking and second call to
    * left motor is blocking to ensure synchronized movement of the two motors.
@@ -408,15 +505,6 @@ public class LightLocalizer extends Thread {
   private void turnLeft(double angle) {
     RIGHT_MOTOR.rotate(convertAngle(WHEEL_RAD, TRACK, angle), true);
     LEFT_MOTOR.rotate(-convertAngle(WHEEL_RAD, TRACK, angle), false);
-  }
-
-  /**
-   * Turns robot right. Turns left EV3 large motor forwards while turning the right EV3 large motor
-   * backwards.
-   */
-  private void turnRight() {
-    LEFT_MOTOR.forward();
-    RIGHT_MOTOR.backward();
   }
 
   /**
@@ -432,6 +520,47 @@ public class LightLocalizer extends Thread {
   }
 
   /**
+   * Starts the robot to move forward
+   */
+  private void moveForward() {
+    LEFT_MOTOR.forward();
+    RIGHT_MOTOR.forward();
+  }
+
+  /**
+   * An overloaded method. Moves the robot forward for a specified distance (in cm). First call is
+   * non-blocking and second call is blocking to ensure synchronized motor movements.
+   * 
+   * @param distance - The distance to travel in cm
+   */
+  private void moveForward(double distance) {
+    LEFT_MOTOR.rotate((int) (distance), true);
+    RIGHT_MOTOR.rotate((int) (distance), false);
+  }
+
+  /**
+   * Moves the robot backward for a specified distance (in cm). First call is non-blocking and
+   * second call is blocking to ensure synchronized motor movements.
+   * 
+   * @param distance - The distance to travel in cm
+   */
+  private void moveBackward(double distance) {
+    LEFT_MOTOR.rotate((int) (-distance), true);
+    RIGHT_MOTOR.rotate((int) (-distance), false);
+  }
+
+  /**
+   * Records the robot's current motor tacho count. Takes the average tacho count of the two motors.
+   * Tacho counts are in degrees.
+   * 
+   * @return The average tacho count of the left and right motors
+   */
+  private int recordTachoCount() {
+    return (LEFT_MOTOR.getTachoCount() + RIGHT_MOTOR.getTachoCount()) / 2;
+  }
+
+
+  /**
    * This is a static method allows the conversion of a distance to the total rotation of each wheel
    * need to cover that distance.
    * 
@@ -443,7 +572,7 @@ public class LightLocalizer extends Thread {
    * @return an integer indicating the total rotation angle for wheel to cover the distance
    */
   private static int convertDistance(double radius, double distance) {
-    return (int) ((180.0 * distance) / (Math.PI * radius));
+    return (int) ((HALF_CIRCLE * distance) / (Math.PI * radius));
   }
 
   /**
@@ -458,7 +587,7 @@ public class LightLocalizer extends Thread {
    * @return an int indicating the total rotation sufficient for wheel to cover turn angle
    */
   private static int convertAngle(double radius, double width, double angle) {
-    return convertDistance(radius, Math.PI * width * angle / 360.0);
+    return convertDistance(radius, Math.PI * width * angle / FULL_CIRCLE);
   }
 
 }
