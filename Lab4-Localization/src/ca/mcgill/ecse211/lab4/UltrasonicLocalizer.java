@@ -415,6 +415,10 @@ public class UltrasonicLocalizer extends Thread {
     return arr[NUM_READINGS / 2];
   }
 
+  // -----------------------------------------------------------------------------
+  // Helper Methods
+  // -----------------------------------------------------------------------------
+
   /**
    * Sets the speed of both the left and right EV3 large motors of the robot.
    * 

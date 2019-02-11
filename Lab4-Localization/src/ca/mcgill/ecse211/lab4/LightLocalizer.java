@@ -79,12 +79,6 @@ public class LightLocalizer extends Thread {
   private static final int CENTER = 0;
 
   /**
-   * Factor to scale the forward movement when approaching the origin. Ensures that the robot stops
-   * before the origin
-   */
-  private static final double DISTANCE_FACTOR = 1 / 3;
-
-  /**
    * The angle (in degrees) corresponding to the North using our convention
    */
   private static final int NORTH = 0;
@@ -199,8 +193,7 @@ public class LightLocalizer extends Thread {
     setAcceleration(SMOOTH_ACCELERATION);
     setSpeed(SPEED);
     // Reset motor TachoCount
-    LEFT_MOTOR.resetTachoCount();
-    RIGHT_MOTOR.resetTachoCount();
+    resetMotorCount();
   }
 
   // -----------------------------------------------------------------------------
@@ -209,7 +202,9 @@ public class LightLocalizer extends Thread {
 
   /**
    * The {@code run()} method required in a Thread class. In this class, a set of movements is
-   * specified to localize the robot's position.
+   * specified to localize the robot's position. The robot determines its current position, then
+   * moves closer to the origin and turns a circle to help correct its odometer. Finally, robot
+   * travels to origin.
    */
   public void run() {
 
@@ -239,9 +234,12 @@ public class LightLocalizer extends Thread {
     // Record the tacho count
     int endTacho = recordTachoCount();
 
-    // Compute the distancee (in degrees of wheel rotation) from the starting point to the grid line
+    // Compute the distance (in degrees of wheel rotation) from the starting point to the grid line
     // detection
     int distanceToGrid = endTacho - startTacho;
+
+    // convert distance from degrees of wheel rotation to cm
+    distanceToGrid = (int) (deg2Distance(WHEEL_RAD, distanceToGrid));
 
     // Reverse back to starting point
     moveBackward(distanceToGrid);
@@ -250,7 +248,7 @@ public class LightLocalizer extends Thread {
     turnRight(ANGLE_TO_ORIGIN);
 
     // Move closer to origin but stop before reaching the origin
-    moveForward((distanceToGrid - SENSOR_DIST) * DISTANCE_FACTOR);
+    moveForward(distanceToGrid - SENSOR_DIST);
 
     // Turn to face straight
     turnLeft(ANGLE_TO_ORIGIN);
@@ -295,6 +293,10 @@ public class LightLocalizer extends Thread {
 
   }
 
+  // -----------------------------------------------------------------------------
+  // Private Methods
+  // -----------------------------------------------------------------------------
+  
   /**
    * Turns the robot 360 degrees to find a total of 4 grid lines, recording the angle at which each
    * grid line is detected. The angles will be used to compute the distances from the origin.
@@ -461,6 +463,10 @@ public class LightLocalizer extends Thread {
     }
   }
 
+  // -----------------------------------------------------------------------------
+  // Helper Methods
+  // -----------------------------------------------------------------------------
+
   /**
    * Sets the speed of both the left and right EV3 large motors of the robot.
    * 
@@ -534,8 +540,9 @@ public class LightLocalizer extends Thread {
    * @param distance - The distance to travel in cm
    */
   private void moveForward(double distance) {
-    LEFT_MOTOR.rotate((int) (distance), true);
-    RIGHT_MOTOR.rotate((int) (distance), false);
+    // calls convertDistance to convert distance from cm to degrees of rotation
+    LEFT_MOTOR.rotate(convertDistance(WHEEL_RAD, distance), true);
+    RIGHT_MOTOR.rotate(convertDistance(WHEEL_RAD, distance), false);
   }
 
   /**
@@ -545,8 +552,8 @@ public class LightLocalizer extends Thread {
    * @param distance - The distance to travel in cm
    */
   private void moveBackward(double distance) {
-    LEFT_MOTOR.rotate((int) (-distance), true);
-    RIGHT_MOTOR.rotate((int) (-distance), false);
+    LEFT_MOTOR.rotate(convertDistance(WHEEL_RAD, -distance), true);
+    RIGHT_MOTOR.rotate(convertDistance(WHEEL_RAD, -distance), false);
   }
 
   /**
@@ -559,6 +566,13 @@ public class LightLocalizer extends Thread {
     return (LEFT_MOTOR.getTachoCount() + RIGHT_MOTOR.getTachoCount()) / 2;
   }
 
+  /**
+   * Resets the tacho count of the motors
+   */
+  private void resetMotorCount() {
+    LEFT_MOTOR.resetTachoCount();
+    RIGHT_MOTOR.resetTachoCount();
+  }
 
   /**
    * This is a static method allows the conversion of a distance to the total rotation of each wheel
@@ -590,4 +604,15 @@ public class LightLocalizer extends Thread {
     return convertDistance(radius, Math.PI * width * angle / FULL_CIRCLE);
   }
 
+  /**
+   * Helper method. Converts degrees of wheel rotation to distance in cm travelled
+   * 
+   * @param radius - radius of robot wheel
+   * @param turncount - total number of degrees turned
+   * @return an double indicating the total distance in cm travelled equivalent to the degrees
+   *         turned
+   */
+  private static double deg2Distance(double radius, int turncount) {
+    return turncount / 360.0 * 2 * Math.PI * radius;
+  }
 }
