@@ -19,9 +19,7 @@ import static ca.mcgill.ecse211.lab4.Lab4.TO_DEG;
 
 /**
  * <p>
- * This class implements localization with the light sensor. This class extends the Thread class to
- * allow simultaneous execution, so that other classes can work alongside this class. Helper methods
- * are added at the end to make conversions easier.
+ * This class implements localization with the light sensor.
  * 
  * <p>
  * The robot is assumed to have its heading (Theta value) localized. The X and Y will be localized

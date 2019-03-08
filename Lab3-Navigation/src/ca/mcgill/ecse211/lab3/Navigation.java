@@ -254,6 +254,8 @@ public class Navigation extends Thread {
 
     isNavigating = true; // update navigating status
 
+    position = odo.getXYT();
+    
     // smoother turn acceleration to avoid wheels slipping
     LEFT_MOTOR.setAcceleration(TURN_ACCELERATION);
     RIGHT_MOTOR.setAcceleration(TURN_ACCELERATION);
