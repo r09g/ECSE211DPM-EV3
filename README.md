@@ -1,13 +1,16 @@
-# ECSE211DPM-EV3 #
+# ECSE211DPM-EV3
 ECSE 211 Design Principles and Methods.
 
-## Labs ##
+## Labs
 - Lab 1: WallFollowing
 - Lab 2: Odometry
 - Lab 3: Navigation
 - Lab 4: Localization
 
-## Notes ##
+## Final Project
+- Testing Leader: Test device functions
+
+## Notes
 __Battery Pack__
 - Red & Green LED: Battery is charging
 - Green LED: Battery is charged
